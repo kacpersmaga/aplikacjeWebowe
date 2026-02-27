@@ -1,11 +1,20 @@
 import type { Project } from '../types';
-
-const STORAGE_KEY = 'manageme_projects';
+import { LocalStorageStrategy } from './storageStrategies';
+import type { StorageStrategy } from './storageStrategies';
 
 class ProjectService {
+  private storage: StorageStrategy;
+
+  constructor(storage: StorageStrategy = new LocalStorageStrategy()) {
+    this.storage = storage;
+  }
+
+  setStrategy(storage: StorageStrategy) {
+    this.storage = storage;
+  }
+
   getAll(): Project[] {
-    const data = localStorage.getItem(STORAGE_KEY);
-    return data ? JSON.parse(data) : [];
+    return this.storage.getAll();
   }
 
   getById(id: string): Project | undefined {
@@ -19,7 +28,7 @@ class ProjectService {
       id: crypto.randomUUID(),
     };
     projects.push(newProject);
-    this.save(projects);
+    this.storage.save(projects);
     return newProject;
   }
 
@@ -29,17 +38,13 @@ class ProjectService {
     if (index === -1) return null;
 
     projects[index] = { ...projects[index], ...updatedProject };
-    this.save(projects);
+    this.storage.save(projects);
     return projects[index];
   }
 
   delete(id: string): void {
     const projects = this.getAll().filter((p) => p.id !== id);
-    this.save(projects);
-  }
-
-  private save(projects: Project[]): void {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(projects));
+    this.storage.save(projects);
   }
 }
 
