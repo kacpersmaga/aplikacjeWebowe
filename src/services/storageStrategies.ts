@@ -1,31 +1,33 @@
-import type { Project } from '../types';
-
-export interface StorageStrategy {
-  getAll(): Project[];
-  save(projects: Project[]): void;
+export interface StorageStrategy<T> {
+  getAll(): T[];
+  save(items: T[]): void;
 }
 
-export class LocalStorageStrategy implements StorageStrategy {
-  private readonly key = 'manageme_projects';
+export class LocalStorageStrategy<T> implements StorageStrategy<T> {
+  private readonly key: string;
 
-  getAll(): Project[] {
+  constructor(key: string) {
+    this.key = key;
+  }
+
+  getAll(): T[] {
     const data = localStorage.getItem(this.key);
     return data ? JSON.parse(data) : [];
   }
 
-  save(projects: Project[]): void {
-    localStorage.setItem(this.key, JSON.stringify(projects));
+  save(items: T[]): void {
+    localStorage.setItem(this.key, JSON.stringify(items));
   }
 }
 
-export class MemoryStorageStrategy implements StorageStrategy {
-  private projects: Project[] = [];
+export class MemoryStorageStrategy<T> implements StorageStrategy<T> {
+  private items: T[] = [];
 
-  getAll(): Project[] {
-    return [...this.projects];
+  getAll(): T[] {
+    return [...this.items];
   }
 
-  save(projects: Project[]): void {
-    this.projects = [...projects];
+  save(items: T[]): void {
+    this.items = [...items];
   }
 }

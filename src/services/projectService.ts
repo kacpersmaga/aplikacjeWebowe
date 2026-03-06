@@ -3,13 +3,13 @@ import { LocalStorageStrategy } from './storageStrategies';
 import type { StorageStrategy } from './storageStrategies';
 
 class ProjectService {
-  private storage: StorageStrategy;
+  private storage: StorageStrategy<Project>;
 
-  constructor(storage: StorageStrategy = new LocalStorageStrategy()) {
+  constructor(storage: StorageStrategy<Project> = new LocalStorageStrategy<Project>('manageme_projects')) {
     this.storage = storage;
   }
 
-  setStrategy(storage: StorageStrategy) {
+  setStrategy(storage: StorageStrategy<Project>) {
     this.storage = storage;
   }
 
