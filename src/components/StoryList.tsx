@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import type { Story, Status } from '../types';
-import { useStories } from '../hooks/useStories';
+import { useStories } from '../context/StoryContext';
 import { StoryForm } from './StoryForm';
 import { Edit2, Trash2, Plus, Calendar, Clock, ChevronRight } from 'lucide-react';
 

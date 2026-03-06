@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import type { Story, Priority, Status } from '../types';
-import { useStories } from '../hooks/useStories';
+import { useStories } from '../context/StoryContext';
 import { useProjects } from '../hooks/useProjects';
 import { userService } from '../services/userService';
 import { X, CheckCircle, PlusCircle, Save } from 'lucide-react';
