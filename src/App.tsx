@@ -1,15 +1,56 @@
 import React, { useState } from 'react'
 import './App.css'
 import { ProjectProvider, ProjectContext } from './context/ProjectContext'
-import { StoryProvider } from './context/StoryContext'
+import { StoryProvider, useStories } from './context/StoryContext'
+import { TaskProvider } from './context/TaskContext'
 import { ProjectList } from './components/ProjectList'
 import { StoryList } from './components/StoryList'
+import { TaskBoard } from './components/TaskBoard'
 import { userService } from './services/userService'
-import { Layout, Users, List, Home, ChevronRight, Menu, Bell, Search, Settings } from 'lucide-react'
+import { Layout, Users, List, Home, ChevronRight, Bell, Search, Settings, ListTodo } from 'lucide-react'
+
+type View = 'projects' | 'stories' | 'tasks';
+
+const ROLE_LABELS: Record<string, string> = {
+  admin: 'Administrator',
+  developer: 'Developer',
+  devops: 'DevOps',
+};
+
+const TasksView: React.FC<{ storyId: string; onBack: () => void }> = ({ storyId, onBack }) => {
+  const { stories, loadStories } = useStories();
+  const story = stories.find(s => s.id === storyId);
+
+  if (!story) {
+    return (
+      <div className="flex flex-col items-center justify-center py-32 gap-6">
+        <p className="text-text-muted font-bold">Nie znaleziono historyjki.</p>
+        <button onClick={onBack} className="px-6 py-3 bg-primary text-white font-black rounded-xl">Wróć</button>
+      </div>
+    );
+  }
+
+  return (
+    <TaskProvider storyId={storyId} onStoryStatusChange={loadStories}>
+      <TaskBoard story={story} />
+    </TaskProvider>
+  );
+};
 
 const AppContent: React.FC = () => {
   const user = userService.getCurrentUser();
-  const [view, setView] = useState<'projects' | 'stories'>('projects');
+  const [view, setView] = useState<View>('projects');
+  const [activeStoryId, setActiveStoryId] = useState<string | null>(null);
+
+  const handleSelectStory = (storyId: string) => {
+    setActiveStoryId(storyId);
+    setView('tasks');
+  };
+
+  const handleBack = () => {
+    setView('stories');
+    setActiveStoryId(null);
+  };
 
   return (
     <StoryProvider>
@@ -27,7 +68,7 @@ const AppContent: React.FC = () => {
               </div>
             </div>
           </div>
-          
+
           <div className="flex items-center gap-8">
             <div className="hidden md:flex items-center gap-2 px-4 py-2 bg-bg-dark/50 border border-border rounded-xl text-text-muted hover:border-primary/50 transition-all group cursor-pointer">
               <Search size={18} className="group-hover:text-primary transition-colors" />
@@ -43,7 +84,7 @@ const AppContent: React.FC = () => {
               <div className="flex items-center gap-4 group cursor-pointer p-1 rounded-2xl hover:bg-white/5 transition-all">
                 <div className="flex flex-col items-end">
                   <span className="text-sm font-black tracking-tight">{user.firstName} {user.lastName}</span>
-                  <span className="text-[10px] uppercase font-black tracking-widest text-primary">Senior Developer</span>
+                  <span className="text-[10px] uppercase font-black tracking-widest text-primary">{ROLE_LABELS[user.role]}</span>
                 </div>
                 <div className="w-11 h-11 bg-gradient-to-tr from-slate-700 to-slate-800 border-2 border-border rounded-xl flex items-center justify-center font-black text-sm text-text-main shadow-lg group-hover:border-primary group-hover:rotate-3 transition-all">
                   {user.firstName[0]}{user.lastName[0]}
@@ -60,25 +101,38 @@ const AppContent: React.FC = () => {
               <div className="space-y-3">
                 <p className="px-4 text-[10px] font-black uppercase tracking-[0.3em] text-text-muted">Główne Menu</p>
                 <div className="flex flex-col gap-1.5">
-                  <button 
+                  <button
                     className={`flex items-center gap-4 px-4 py-3.5 rounded-2xl font-bold transition-all duration-300 group
-                      ${view === 'projects' 
-                        ? 'bg-primary text-white shadow-xl shadow-primary/20 ring-1 ring-white/20' 
+                      ${view === 'projects'
+                        ? 'bg-primary text-white shadow-xl shadow-primary/20 ring-1 ring-white/20'
                         : 'text-text-muted hover:bg-white/5 hover:text-text-main'}`}
                     onClick={() => setView('projects')}
                   >
                     <Home size={20} className={`transition-transform duration-300 ${view === 'projects' ? 'scale-110' : 'group-hover:translate-x-1'}`} />
                     <span>Projekty</span>
                   </button>
-                  <button 
+                  <button
                     className={`flex items-center gap-4 px-4 py-3.5 rounded-2xl font-bold transition-all duration-300 group
-                      ${view === 'stories' 
-                        ? 'bg-primary text-white shadow-xl shadow-primary/20 ring-1 ring-white/20' 
+                      ${view === 'stories'
+                        ? 'bg-primary text-white shadow-xl shadow-primary/20 ring-1 ring-white/20'
                         : 'text-text-muted hover:bg-white/5 hover:text-text-main'}`}
-                    onClick={() => setView('stories')}
+                    onClick={() => { setView('stories'); setActiveStoryId(null); }}
                   >
                     <List size={20} className={`transition-transform duration-300 ${view === 'stories' ? 'scale-110' : 'group-hover:translate-x-1'}`} />
                     <span>Historyjki</span>
+                  </button>
+                  <button
+                    className={`flex items-center gap-4 px-4 py-3.5 rounded-2xl font-bold transition-all duration-300 group
+                      ${view === 'tasks'
+                        ? 'bg-primary text-white shadow-xl shadow-primary/20 ring-1 ring-white/20'
+                        : activeStoryId
+                          ? 'text-text-muted hover:bg-white/5 hover:text-text-main'
+                          : 'text-text-muted opacity-40 cursor-not-allowed'}`}
+                    onClick={() => activeStoryId && setView('tasks')}
+                    disabled={!activeStoryId}
+                  >
+                    <ListTodo size={20} className={`transition-transform duration-300 ${view === 'tasks' ? 'scale-110' : 'group-hover:translate-x-1'}`} />
+                    <span>Zadania</span>
                   </button>
                 </div>
               </div>
@@ -120,19 +174,28 @@ const AppContent: React.FC = () => {
 
                 return (
                   <div className="p-10 max-w-[1600px] mx-auto min-h-full flex flex-col">
-                    <header className="flex items-center gap-3 mb-12 bg-bg-sidebar/30 w-fit px-5 py-2.5 rounded-2xl border border-border shadow-lg">
+                    <header className="flex items-center gap-3 mb-12 bg-bg-sidebar/30 w-fit px-5 py-2.5 rounded-2xl border border-border shadow-lg flex-wrap">
                       <span className="text-sm font-bold text-text-muted">Panel Sterowania</span>
                       <ChevronRight size={16} className="text-border" />
                       <span className={`text-sm font-black uppercase tracking-widest ${view === 'projects' ? 'text-primary' : 'text-text-muted'}`}>
-                        {view === 'projects' ? 'Przegląd Projektów' : 'Tablica Zadań'}
+                        {view === 'projects' ? 'Przegląd Projektów' : view === 'stories' ? 'Tablica Historyjek' : 'Tablica Zadań'}
                       </span>
-                      {activeProject && (
+                      {activeProject && view !== 'projects' && (
                         <>
                           <ChevronRight size={16} className="text-border" />
-                          <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => setView('stories')}
+                            className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+                          >
                             <div className="w-2 h-2 rounded-full bg-primary shadow-[0_0_10px_rgba(99,102,241,0.8)]" />
                             <span className="text-sm font-black text-white bg-primary/20 px-3 py-1 rounded-lg border border-primary/30">{activeProject.name}</span>
-                          </div>
+                          </button>
+                        </>
+                      )}
+                      {view === 'tasks' && activeStoryId && (
+                        <>
+                          <ChevronRight size={16} className="text-border" />
+                          <span className="text-sm font-black text-primary">Zadania</span>
                         </>
                       )}
                     </header>
@@ -141,7 +204,7 @@ const AppContent: React.FC = () => {
                       {view === 'projects' && <ProjectList />}
                       {view === 'stories' && (
                         activeProjectId ? (
-                          <StoryList />
+                          <StoryList onSelectStory={handleSelectStory} />
                         ) : (
                           <div className="flex-1 flex flex-col items-center justify-center py-32 bg-bg-sidebar/20 border border-dashed border-border rounded-[3rem] gap-8 text-center animate-fade-in group">
                             <div className="relative">
@@ -156,7 +219,7 @@ const AppContent: React.FC = () => {
                                 Tablica zadań wymaga kontekstu. Wybierz jeden z aktywnych projektów, aby zarządzać jego funkcjonalnościami.
                               </p>
                             </div>
-                            <button 
+                            <button
                               className="flex items-center gap-3 px-12 py-5 bg-primary hover:bg-primary-hover text-white font-black text-lg rounded-2xl shadow-2xl shadow-primary/30 hover:scale-105 active:scale-95 transition-all group relative overflow-hidden"
                               onClick={() => setView('projects')}
                             >
@@ -166,6 +229,9 @@ const AppContent: React.FC = () => {
                             </button>
                           </div>
                         )
+                      )}
+                      {view === 'tasks' && activeStoryId && (
+                        <TasksView storyId={activeStoryId} onBack={handleBack} />
                       )}
                     </div>
                   </div>

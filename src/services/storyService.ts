@@ -1,4 +1,4 @@
-import type { Story, Priority, Status } from '../types';
+import type { Story } from '../types';
 import { LocalStorageStrategy } from './storageStrategies';
 import type { StorageStrategy } from './storageStrategies';
 

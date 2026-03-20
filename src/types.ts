@@ -4,10 +4,13 @@ export interface Project {
   description: string;
 }
 
+export type Role = 'admin' | 'devops' | 'developer';
+
 export interface User {
   id: string;
   firstName: string;
   lastName: string;
+  role: Role;
 }
 
 export type Priority = 'low' | 'medium' | 'high';
@@ -22,4 +25,18 @@ export interface Story {
   createdAt: string;
   status: Status;
   ownerId: string;
+}
+
+export interface Task {
+  id: string;
+  name: string;
+  description: string;
+  priority: Priority;
+  storyId: string;
+  estimatedTime: number; // hours
+  status: Status;
+  createdAt: string;
+  startDate?: string;
+  endDate?: string;
+  assignedUserId?: string;
 }

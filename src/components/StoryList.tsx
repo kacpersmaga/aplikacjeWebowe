@@ -2,9 +2,13 @@ import React, { useState } from 'react';
 import type { Story, Status } from '../types';
 import { useStories } from '../context/StoryContext';
 import { StoryForm } from './StoryForm';
-import { Edit2, Trash2, Plus, Calendar, Clock, ChevronRight } from 'lucide-react';
+import { Edit2, Trash2, Plus, Calendar, Clock, ListTodo } from 'lucide-react';
 
-export const StoryList: React.FC = () => {
+interface StoryListProps {
+  onSelectStory: (storyId: string) => void;
+}
+
+export const StoryList: React.FC<StoryListProps> = ({ onSelectStory }) => {
   const { stories, deleteStory } = useStories();
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [storyToEdit, setStoryToEdit] = useState<Story | undefined>(undefined);
@@ -39,14 +43,21 @@ export const StoryList: React.FC = () => {
           {story.priority}
         </span>
         <div className="flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
-          <button 
-            onClick={() => handleEdit(story)} 
+          <button
+            onClick={() => onSelectStory(story.id)}
+            className="p-1.5 text-text-muted hover:text-primary transition-colors"
+            title="Zobacz zadania"
+          >
+            <ListTodo size={14} />
+          </button>
+          <button
+            onClick={() => handleEdit(story)}
             className="p-1.5 text-text-muted hover:text-primary transition-colors"
           >
             <Edit2 size={14} />
           </button>
-          <button 
-            onClick={() => deleteStory(story.id)} 
+          <button
+            onClick={() => deleteStory(story.id)}
             className="p-1.5 text-text-muted hover:text-danger transition-colors"
           >
             <Trash2 size={14} />
@@ -54,7 +65,10 @@ export const StoryList: React.FC = () => {
         </div>
       </div>
       
-      <h3 className="text-lg font-bold text-text-main mb-2 leading-tight group-hover:text-primary transition-colors">
+      <h3
+        className="text-lg font-bold text-text-main mb-2 leading-tight group-hover:text-primary transition-colors cursor-pointer"
+        onClick={() => onSelectStory(story.id)}
+      >
         {story.name}
       </h3>
       <p className="text-text-muted text-sm font-medium line-clamp-2 mb-4 leading-relaxed">
