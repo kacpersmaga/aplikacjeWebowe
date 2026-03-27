@@ -1,7 +1,10 @@
 import React, { useState } from 'react';
 import type { Task, Priority } from '../types';
 import { useTasks } from '../context/TaskContext';
-import { X, CheckCircle, PlusCircle, Save } from 'lucide-react';
+import { ListTodo, X } from 'lucide-react';
+import { Modal } from './ui/Modal';
+import { Button } from './ui/Button';
+import { TextField, TextAreaField, SelectField } from './ui/FormField';
 
 interface TaskFormProps {
   onClose: () => void;
@@ -21,127 +24,90 @@ export const TaskForm: React.FC<TaskFormProps> = ({ onClose, taskToEdit }) => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!storyId) return;
-
     if (taskToEdit) {
       updateTask(taskToEdit.id, formData);
     } else {
-      addTask({
-        ...formData,
-        storyId,
-        status: 'todo',
-      });
+      addTask({ ...formData, storyId, status: 'todo' });
     }
     onClose();
   };
 
   return (
-    <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-[2000] p-4 animate-in fade-in duration-300">
-      <div className="w-full max-w-2xl bg-bg-sidebar p-8 rounded-[2rem] border border-border shadow-2xl relative">
-        <button
-          onClick={onClose}
-          className="absolute top-6 right-6 p-2 text-text-muted hover:text-text-main transition-colors hover:bg-black/5 dark:hover:bg-white/5 rounded-full"
-        >
-          <X size={24} />
-        </button>
-
-        <div className="flex items-center gap-4 mb-10 pb-6 border-b border-border">
-          <div className="p-3 bg-primary/10 rounded-2xl text-primary ring-1 ring-primary/20">
-            {taskToEdit ? <Save size={28} /> : <PlusCircle size={28} />}
+    <Modal onClose={onClose}>
+      {/* Header */}
+      <div className="flex items-center justify-between px-6 pt-6 pb-5 border-b border-border">
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-primary/10 rounded-lg text-primary">
+            <ListTodo size={18} />
           </div>
           <div>
-            <h2 className="text-3xl font-black text-text-main tracking-tight">
-              {taskToEdit ? 'Edytuj Zadanie' : 'Nowe Zadanie'}
+            <h2 className="font-display text-lg font-bold text-text-main">
+              {taskToEdit ? 'Edytuj zadanie' : 'Nowe zadanie'}
             </h2>
-            <p className="text-text-muted font-medium">Zdefiniuj zadanie i oszacuj czas realizacji</p>
+            <p className="text-xs text-text-muted mt-0.5">Zdefiniuj zadanie i oszacuj czas</p>
           </div>
         </div>
-
-        <form onSubmit={handleSubmit} className="space-y-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div className="space-y-6 flex flex-col justify-between">
-              <div className="space-y-2">
-                <label htmlFor="name" className="text-sm font-bold text-text-muted px-1 block uppercase tracking-widest">
-                  Nazwa Zadania
-                </label>
-                <input
-                  type="text"
-                  id="name"
-                  placeholder="Co trzeba zrobić?"
-                  className="w-full px-4 py-3.5 bg-bg-dark border border-border rounded-xl text-text-main placeholder:text-gray-400 dark:placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all duration-200"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  required
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <label htmlFor="priority" className="text-sm font-bold text-text-muted px-1 block uppercase tracking-widest">
-                    Priorytet
-                  </label>
-                  <select
-                    id="priority"
-                    className="w-full px-4 py-3.5 bg-bg-dark border border-border rounded-xl text-text-main focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all appearance-none cursor-pointer"
-                    value={formData.priority}
-                    onChange={(e) => setFormData({ ...formData, priority: e.target.value as Priority })}
-                  >
-                    <option value="low">Niski</option>
-                    <option value="medium">Średni</option>
-                    <option value="high">Wysoki</option>
-                  </select>
-                </div>
-                <div className="space-y-2">
-                  <label htmlFor="estimatedTime" className="text-sm font-bold text-text-muted px-1 block uppercase tracking-widest">
-                    Czas (h)
-                  </label>
-                  <input
-                    type="number"
-                    id="estimatedTime"
-                    min={0.5}
-                    step={0.5}
-                    className="w-full px-4 py-3.5 bg-bg-dark border border-border rounded-xl text-text-main focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
-                    value={formData.estimatedTime}
-                    onChange={(e) => setFormData({ ...formData, estimatedTime: parseFloat(e.target.value) })}
-                    required
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <label htmlFor="description" className="text-sm font-bold text-text-muted px-1 block uppercase tracking-widest">
-                Opis Szczegółowy
-              </label>
-              <textarea
-                id="description"
-                placeholder="Opisz szczegółowo zadanie..."
-                className="w-full h-full px-4 py-4 bg-bg-dark border border-border rounded-xl text-text-main placeholder:text-gray-400 dark:placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all duration-200 resize-none"
-                value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                required
-                rows={6}
-              />
-            </div>
-          </div>
-
-          <div className="flex items-center justify-end gap-4 pt-6 border-t border-border mt-10">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-6 py-3 rounded-xl border border-border text-text-muted font-bold hover:bg-gray-100 dark:hover:bg-slate-800 hover:text-text-main transition-all shadow-lg"
-            >
-              Anuluj
-            </button>
-            <button
-              type="submit"
-              className="flex items-center gap-3 px-10 py-3 bg-primary hover:bg-primary-hover text-white font-black rounded-xl shadow-xl shadow-primary/20 active:scale-95 transition-all"
-            >
-              <CheckCircle size={20} className="stroke-[3px]" />
-              <span>{taskToEdit ? 'Zapisz Zmiany' : 'Dodaj Zadanie'}</span>
-            </button>
-          </div>
-        </form>
+        <button
+          onClick={onClose}
+          className="p-1.5 text-text-muted hover:text-text-main hover:bg-black/5 dark:hover:bg-white/5 rounded-lg transition-colors"
+        >
+          <X size={18} />
+        </button>
       </div>
-    </div>
+
+      {/* Form */}
+      <form onSubmit={handleSubmit} className="p-6 space-y-5">
+        <TextField
+          id="name"
+          label="Nazwa zadania"
+          placeholder="Co trzeba zrobić?"
+          value={formData.name}
+          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+          required
+          autoFocus
+        />
+
+        <div className="grid grid-cols-2 gap-4">
+          <SelectField
+            id="priority"
+            label="Priorytet"
+            value={formData.priority}
+            onChange={(e) => setFormData({ ...formData, priority: e.target.value as Priority })}
+          >
+            <option value="low">Niski</option>
+            <option value="medium">Średni</option>
+            <option value="high">Wysoki</option>
+          </SelectField>
+
+          <TextField
+            id="estimatedTime"
+            label="Czas (h)"
+            type="number"
+            min={0.5}
+            step={0.5}
+            value={formData.estimatedTime}
+            onChange={(e) => setFormData({ ...formData, estimatedTime: parseFloat(e.target.value) })}
+            required
+          />
+        </div>
+
+        <TextAreaField
+          id="description"
+          label="Opis"
+          placeholder="Opisz szczegółowo zadanie..."
+          value={formData.description}
+          onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+          required
+          rows={4}
+        />
+
+        <div className="flex justify-end gap-2.5 pt-2">
+          <Button type="button" variant="ghost" onClick={onClose}>Anuluj</Button>
+          <Button type="submit" variant="primary">
+            {taskToEdit ? 'Zapisz zmiany' : 'Dodaj zadanie'}
+          </Button>
+        </div>
+      </form>
+    </Modal>
   );
 };

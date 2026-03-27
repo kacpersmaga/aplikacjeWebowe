@@ -2,7 +2,16 @@ import React, { useState } from 'react';
 import type { Story, Status } from '../types';
 import { useStories } from '../context/StoryContext';
 import { StoryForm } from './StoryForm';
-import { Edit2, Trash2, Plus, Calendar, Clock, ListTodo } from 'lucide-react';
+import { KanbanColumn } from './KanbanColumn';
+import { PriorityBadge } from './ui/Badge';
+import { Button } from './ui/Button';
+import { Edit2, Trash2, ListTodo, Calendar, LayoutList, Plus } from 'lucide-react';
+
+const PRIORITY_ACCENT: Record<string, string> = {
+  high: 'bg-red-500',
+  medium: 'bg-amber-400',
+  low: 'bg-zinc-300 dark:bg-zinc-600',
+};
 
 interface StoryListProps {
   onSelectStory: (storyId: string) => void;
@@ -25,124 +34,101 @@ export const StoryList: React.FC<StoryListProps> = ({ onSelectStory }) => {
 
   const storiesByStatus = (status: Status) => stories.filter(s => s.status === status);
 
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case 'high': return 'text-danger bg-danger/10 border-danger/20';
-      case 'medium': return 'text-amber-500 bg-amber-500/10 border-amber-500/20';
-      default: return 'text-success bg-success/10 border-success/20';
-    }
-  };
-
   const renderStoryCard = (story: Story) => (
-    <div 
-      key={story.id} 
-      className="group bg-bg-sidebar border border-border p-5 rounded-2xl transition-all duration-300 hover:border-primary/50 hover:bg-black/5 dark:hover:bg-white/5 hover:translate-x-1 shadow-lg"
+    <div
+      key={story.id}
+      className="group relative bg-bg-sidebar border border-border rounded-xl overflow-hidden
+        transition-all duration-150 hover:border-zinc-300 dark:hover:border-zinc-600 hover:shadow-md"
     >
-      <div className="flex justify-between items-start mb-4">
-        <span className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border ${getPriorityColor(story.priority)}`}>
-          {story.priority}
-        </span>
-        <div className="flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
-          <button
-            onClick={() => onSelectStory(story.id)}
-            className="p-1.5 text-text-muted hover:text-primary transition-colors"
-            title="Zobacz zadania"
-          >
-            <ListTodo size={14} />
-          </button>
-          <button
-            onClick={() => handleEdit(story)}
-            className="p-1.5 text-text-muted hover:text-primary transition-colors"
-          >
-            <Edit2 size={14} />
-          </button>
-          <button
-            onClick={() => deleteStory(story.id)}
-            className="p-1.5 text-text-muted hover:text-danger transition-colors"
-          >
-            <Trash2 size={14} />
-          </button>
-        </div>
-      </div>
-      
-      <h3
-        className="text-lg font-bold text-text-main mb-2 leading-tight group-hover:text-primary transition-colors cursor-pointer"
-        onClick={() => onSelectStory(story.id)}
-      >
-        {story.name}
-      </h3>
-      <p className="text-text-muted text-sm font-medium line-clamp-2 mb-4 leading-relaxed">
-        {story.description}
-      </p>
+      {/* Priority accent bar */}
+      <div className={`absolute left-0 top-0 bottom-0 w-[3px] ${PRIORITY_ACCENT[story.priority]}`} />
 
-      <div className="flex items-center justify-between text-[11px] text-text-muted font-bold pt-4 border-t border-border/50">
-        <div className="flex items-center gap-1.5">
-          <Calendar size={12} className="text-primary/60" />
-          {new Date(story.createdAt).toLocaleDateString()}
+      <div className="pl-4 pr-3 py-3.5">
+        {/* Top: badge + actions */}
+        <div className="flex items-start justify-between gap-2 mb-2.5">
+          <PriorityBadge priority={story.priority} />
+          <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+            <button
+              onClick={() => onSelectStory(story.id)}
+              className="p-1.5 text-text-muted hover:text-primary hover:bg-primary/10 rounded-md transition-colors"
+              title="Zobacz zadania"
+            >
+              <ListTodo size={13} />
+            </button>
+            <button
+              onClick={() => handleEdit(story)}
+              className="p-1.5 text-text-muted hover:text-text-main hover:bg-black/5 dark:hover:bg-white/5 rounded-md transition-colors"
+            >
+              <Edit2 size={13} />
+            </button>
+            <button
+              onClick={() => deleteStory(story.id)}
+              className="p-1.5 text-text-muted hover:text-danger hover:bg-danger/10 rounded-md transition-colors"
+            >
+              <Trash2 size={13} />
+            </button>
+          </div>
         </div>
-        <div className="flex items-center gap-1.5">
-          <Clock size={12} className="text-primary/60" />
-          {new Date(story.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+
+        {/* Title */}
+        <h3
+          className="text-sm font-semibold text-text-main leading-snug mb-1.5 cursor-pointer hover:text-primary transition-colors"
+          onClick={() => onSelectStory(story.id)}
+        >
+          {story.name}
+        </h3>
+
+        {/* Description */}
+        <p className="text-xs text-text-muted line-clamp-2 leading-relaxed mb-3">
+          {story.description}
+        </p>
+
+        {/* Footer */}
+        <div className="flex items-center gap-1.5 text-[11px] font-mono text-text-muted/70">
+          <Calendar size={10} />
+          {new Date(story.createdAt).toLocaleDateString('pl-PL', { day: '2-digit', month: 'short' })}
         </div>
       </div>
     </div>
   );
 
   return (
-    <div className="w-full flex flex-col gap-10 animate-fade-in pb-10">
-      <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-        <div>
-          <h2 className="text-4xl font-extrabold text-text-main tracking-tight">Tablica Historyjek</h2>
-          <p className="text-text-muted mt-1 font-medium italic">Wszystkie zadania dla aktualnie wybranego projektu</p>
-        </div>
-        <button 
-          className="flex items-center gap-3 px-8 py-3.5 bg-primary hover:bg-primary-hover text-white font-black rounded-2xl shadow-xl shadow-primary/20 active:scale-95 transition-all" 
-          onClick={() => setIsFormOpen(true)}
-        >
-          <Plus size={24} className="stroke-[3px]" />
-          Dodaj Zadanie
-        </button>
-      </header>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {(['todo', 'doing', 'done'] as Status[]).map((status) => (
-          <div key={status} className="flex flex-col gap-5 bg-bg-sidebar/20 p-6 rounded-[2.5rem] border border-border/40 backdrop-blur-xl">
-            <div className="flex items-center justify-between px-3">
-              <div className="flex items-center gap-3">
-                <div className={`w-3 h-3 rounded-full ${
-                  status === 'todo' ? 'bg-slate-500' : status === 'doing' ? 'bg-amber-500' : 'bg-success'
-                } shadow-lg ring-4 ring-opacity-20 ${
-                  status === 'todo' ? 'ring-slate-500' : status === 'doing' ? 'ring-amber-500' : 'ring-success'
-                }`} />
-                <span className="text-sm font-black text-text-main uppercase tracking-[0.2em]">
-                  {status === 'todo' ? 'Czekające' : status === 'doing' ? 'W trakcie' : 'Gotowe'}
-                </span>
-              </div>
-              <span className="px-2.5 py-1 bg-border/40 rounded-lg text-[10px] font-black text-text-muted">
-                {storiesByStatus(status).length}
-              </span>
-            </div>
-
-            <div className="flex flex-col gap-4 min-h-[300px]">
-              {storiesByStatus(status).length === 0 ? (
-                <div className="flex-1 flex flex-col items-center justify-center border-2 border-dashed border-border/30 rounded-3xl opacity-30 p-10 text-center grayscale">
-                  <Clock size={48} className="mb-4" />
-                  <p className="text-xs font-bold uppercase tracking-widest">Pusta Kolumna</p>
-                </div>
-              ) : (
-                storiesByStatus(status).map(renderStoryCard)
-              )}
-            </div>
+    <div className="flex flex-col gap-8 animate-fade-in pb-6">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 pb-8 border-b border-border">
+        <div className="flex items-center gap-4">
+          <div className="p-2.5 bg-primary/10 rounded-xl text-primary ring-1 ring-primary/20">
+            <LayoutList size={24} />
           </div>
-        ))}
+          <div>
+            <h2 className="font-display text-2xl font-bold text-text-main tracking-tight">Historyjki</h2>
+            <p className="text-sm text-text-muted mt-0.5">{stories.length} historyjek w projekcie</p>
+          </div>
+        </div>
+        <Button variant="primary" icon={<Plus size={15} />} onClick={() => setIsFormOpen(true)}>
+          Dodaj historyjkę
+        </Button>
       </div>
 
-      {isFormOpen && (
-        <StoryForm 
-          onClose={handleCloseForm} 
-          storyToEdit={storyToEdit} 
-        />
-      )}
+      {/* Kanban */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        {(['todo', 'doing', 'done'] as Status[]).map((status) => {
+          const items = storiesByStatus(status);
+          return (
+            <KanbanColumn
+              key={status}
+              status={status}
+              count={items.length}
+              emptyIcon={<LayoutList size={28} />}
+              emptyText="Brak historyjek"
+            >
+              {items.map(renderStoryCard)}
+            </KanbanColumn>
+          );
+        })}
+      </div>
+
+      {isFormOpen && <StoryForm onClose={handleCloseForm} storyToEdit={storyToEdit} />}
     </div>
   );
 };

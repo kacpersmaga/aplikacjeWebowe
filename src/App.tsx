@@ -8,245 +8,272 @@ import { StoryList } from './components/StoryList'
 import { TaskBoard } from './components/TaskBoard'
 import { userService } from './services/userService'
 import { useDarkMode } from './hooks/useDarkMode'
-import { Layout, Users, List, Home, ChevronRight, Bell, Search, Settings, ListTodo, Sun, Moon } from 'lucide-react'
+import {
+  LayoutDashboard, List, ListTodo, Users, Settings,
+  Bell, Search, Sun, Moon, ChevronRight, FolderKanban,
+} from 'lucide-react'
 
-type View = 'projects' | 'stories' | 'tasks';
+type View = 'projects' | 'stories' | 'tasks'
 
 const ROLE_LABELS: Record<string, string> = {
-  admin: 'Administrator',
+  admin: 'Admin',
   developer: 'Developer',
   devops: 'DevOps',
-};
+}
+
+const ROLE_COLORS: Record<string, string> = {
+  admin: 'text-violet-500',
+  developer: 'text-sky-500',
+  devops: 'text-emerald-500',
+}
 
 const TasksView: React.FC<{ storyId: string; onBack: () => void }> = ({ storyId, onBack }) => {
-  const { stories, loadStories } = useStories();
-  const story = stories.find(s => s.id === storyId);
-
+  const { stories, loadStories } = useStories()
+  const story = stories.find(s => s.id === storyId)
   if (!story) {
     return (
-      <div className="flex flex-col items-center justify-center py-32 gap-6">
-        <p className="text-text-muted font-bold">Nie znaleziono historyjki.</p>
-        <button onClick={onBack} className="px-6 py-3 bg-primary text-white font-black rounded-xl">Wróć</button>
+      <div className="flex flex-col items-center justify-center py-32 gap-4">
+        <p className="text-text-muted">Nie znaleziono historyjki.</p>
+        <button onClick={onBack} className="px-4 py-2 bg-primary text-white rounded-xl text-sm font-medium">Wróć</button>
       </div>
-    );
+    )
   }
-
   return (
     <TaskProvider storyId={storyId} onStoryStatusChange={loadStories}>
       <TaskBoard story={story} />
     </TaskProvider>
-  );
-};
+  )
+}
 
 const AppContent: React.FC = () => {
-  const user = userService.getCurrentUser();
-  const [view, setView] = useState<View>('projects');
-  const [activeStoryId, setActiveStoryId] = useState<string | null>(null);
-  const { isDark, toggle } = useDarkMode();
+  const user = userService.getCurrentUser()
+  const [view, setView] = useState<View>('projects')
+  const [activeStoryId, setActiveStoryId] = useState<string | null>(null)
+  const { isDark, toggle } = useDarkMode()
 
-  const handleSelectStory = (storyId: string) => {
-    setActiveStoryId(storyId);
-    setView('tasks');
-  };
+  const handleSelectStory = (storyId: string) => { setActiveStoryId(storyId); setView('tasks') }
+  const handleBack = () => { setView('stories'); setActiveStoryId(null) }
 
-  const handleBack = () => {
-    setView('stories');
-    setActiveStoryId(null);
-  };
+  const navItems = [
+    { id: 'projects' as View, label: 'Projekty', icon: <LayoutDashboard size={17} /> },
+    { id: 'stories' as View, label: 'Historyjki', icon: <List size={17} /> },
+    { id: 'tasks' as View, label: 'Zadania', icon: <ListTodo size={17} />, disabled: !activeStoryId },
+  ]
 
   return (
     <StoryProvider>
-      <div className="flex flex-col min-h-screen bg-bg-dark text-text-main antialiased selection:bg-primary/30 selection:text-primary transition-colors duration-300">
-        {/* Top Navbar */}
-        <nav className="sticky top-0 z-50 flex items-center justify-between px-8 h-20 bg-bg-sidebar/80 backdrop-blur-2xl border-b border-border shadow-lg">
-          <div className="flex items-center gap-10">
-            <div className="flex items-center gap-3 group cursor-pointer">
-              <div className="w-12 h-12 bg-gradient-to-br from-primary via-indigo-500 to-purple-600 rounded-[14px] flex items-center justify-center font-black text-2xl text-white shadow-xl shadow-primary/20 group-hover:rotate-6 group-hover:scale-110 transition-all duration-300 ring-2 ring-black/5 dark:ring-white/10">
-                M
-              </div>
-              <div className="flex flex-col">
-                <span className="text-xl font-black tracking-tighter leading-none group-hover:text-primary transition-colors">Manage<span className="text-primary group-hover:text-text-main">Me</span></span>
-                <span className="text-[10px] uppercase tracking-[0.2em] font-black text-text-muted opacity-60">Professional Edition</span>
-              </div>
+      <div className="flex flex-col min-h-screen bg-bg-dark text-text-main transition-colors duration-300">
+
+        {/* ── Navbar ─────────────────────────────────────────── */}
+        <header className="sticky top-0 z-50 h-14 flex items-center gap-6 px-6 bg-bg-sidebar/90 backdrop-blur-xl border-b border-border">
+
+          {/* Logo */}
+          <div className="flex items-center gap-2.5 shrink-0">
+            <div className="w-8 h-8 bg-gradient-to-br from-primary to-violet-600 rounded-lg flex items-center justify-center font-display font-black text-base text-white shadow-md shadow-primary/30">
+              M
             </div>
+            <span className="font-display font-bold text-base text-text-main tracking-tight">
+              Manage<span className="text-primary">Me</span>
+            </span>
           </div>
 
-          <div className="flex items-center gap-8">
-            <div className="hidden md:flex items-center gap-2 px-4 py-2 bg-bg-dark/50 border border-border rounded-xl text-text-muted hover:border-primary/50 transition-all group cursor-pointer">
-              <Search size={18} className="group-hover:text-primary transition-colors" />
-              <span className="text-sm font-bold">Wyszukiwarka globalna...</span>
-              <span className="ml-4 px-1.5 py-0.5 bg-border/60 rounded text-[10px] font-black">⌘K</span>
-            </div>
+          {/* Divider */}
+          <div className="h-5 w-px bg-border shrink-0" />
 
-            <div className="flex items-center gap-4 border-l border-border pl-8">
-              {/* Dark mode toggle */}
+          {/* Nav items (inline in header on large screens) */}
+          <nav className="hidden md:flex items-center gap-1">
+            {navItems.map(item => (
               <button
-                onClick={toggle}
-                className="p-2.5 text-text-muted hover:text-primary hover:bg-primary/10 rounded-xl transition-all"
-                title={isDark ? 'Tryb jasny' : 'Tryb ciemny'}
+                key={item.id}
+                onClick={() => !item.disabled && setView(item.id)}
+                disabled={item.disabled}
+                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-all
+                  ${view === item.id
+                    ? 'bg-primary/10 text-primary'
+                    : item.disabled
+                    ? 'text-text-muted/30 cursor-not-allowed'
+                    : 'text-text-muted hover:text-text-main hover:bg-black/5 dark:hover:bg-white/5'
+                  }`}
               >
-                {isDark ? <Sun size={22} /> : <Moon size={22} />}
+                {item.icon}
+                {item.label}
               </button>
+            ))}
+          </nav>
 
-              <button className="relative p-2.5 text-text-muted hover:text-primary hover:bg-primary/10 rounded-xl transition-all">
-                <Bell size={22} />
-                <div className="absolute top-2 right-2 w-2.5 h-2.5 bg-danger rounded-full border-2 border-bg-sidebar ring-2 ring-danger/20" />
-              </button>
-              <div className="flex items-center gap-4 group cursor-pointer p-1 rounded-2xl hover:bg-black/5 dark:hover:bg-white/5 transition-all">
-                <div className="flex flex-col items-end">
-                  <span className="text-sm font-black tracking-tight">{user.firstName} {user.lastName}</span>
-                  <span className="text-[10px] uppercase font-black tracking-widest text-primary">{ROLE_LABELS[user.role]}</span>
-                </div>
-                <div className="w-11 h-11 bg-gradient-to-tr from-slate-100 to-slate-200 dark:from-slate-700 dark:to-slate-800 border-2 border-border rounded-xl flex items-center justify-center font-black text-sm text-text-main shadow-lg group-hover:border-primary group-hover:rotate-3 transition-all">
-                  {user.firstName[0]}{user.lastName[0]}
-                </div>
+          {/* Right side */}
+          <div className="ml-auto flex items-center gap-2">
+            {/* Global search */}
+            <div className="hidden lg:flex items-center gap-2 px-3 py-1.5 bg-bg-dark border border-border rounded-xl text-sm text-text-muted hover:border-primary/40 transition-colors cursor-pointer group">
+              <Search size={13} className="group-hover:text-primary transition-colors" />
+              <span className="font-sans text-xs">Szukaj...</span>
+              <kbd className="ml-4 px-1.5 py-0.5 bg-border/60 rounded text-[10px] font-mono opacity-60">⌘K</kbd>
+            </div>
+
+            {/* Dark mode */}
+            <button
+              onClick={toggle}
+              title={isDark ? 'Tryb jasny' : 'Tryb ciemny'}
+              className="p-2 text-text-muted hover:text-text-main hover:bg-black/5 dark:hover:bg-white/5 rounded-lg transition-colors"
+            >
+              {isDark ? <Sun size={17} /> : <Moon size={17} />}
+            </button>
+
+            {/* Notifications */}
+            <button className="relative p-2 text-text-muted hover:text-text-main hover:bg-black/5 dark:hover:bg-white/5 rounded-lg transition-colors">
+              <Bell size={17} />
+              <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-danger rounded-full ring-2 ring-bg-sidebar" />
+            </button>
+
+            {/* User */}
+            <div className="flex items-center gap-2.5 pl-2 border-l border-border">
+              <div className="hidden lg:block text-right">
+                <p className="text-xs font-semibold text-text-main leading-none">{user.firstName} {user.lastName}</p>
+                <p className={`text-[10px] font-mono mt-0.5 ${ROLE_COLORS[user.role] ?? 'text-primary'}`}>
+                  {ROLE_LABELS[user.role]}
+                </p>
+              </div>
+              <div className="w-8 h-8 bg-gradient-to-tr from-slate-100 to-slate-200 dark:from-slate-700 dark:to-slate-800 border border-border rounded-lg flex items-center justify-center font-bold text-xs text-text-main shrink-0">
+                {user.firstName[0]}{user.lastName[0]}
               </div>
             </div>
           </div>
-        </nav>
+        </header>
 
-        <div className="flex flex-1 h-[calc(100vh-80px)] overflow-hidden">
+        {/* ── Body ───────────────────────────────────────────── */}
+        <div className="flex flex-1 overflow-hidden h-[calc(100vh-56px)]">
+
           {/* Sidebar */}
-          <aside className="w-72 bg-bg-sidebar/50 border-r border-border p-8 flex flex-col justify-between backdrop-blur-xl">
-            <div className="space-y-10">
-              <div className="space-y-3">
-                <p className="px-4 text-[10px] font-black uppercase tracking-[0.3em] text-text-muted">Główne Menu</p>
-                <div className="flex flex-col gap-1.5">
-                  <button
-                    className={`flex items-center gap-4 px-4 py-3.5 rounded-2xl font-bold transition-all duration-300 group
-                      ${view === 'projects'
-                        ? 'bg-primary text-white shadow-xl shadow-primary/20 ring-1 ring-black/10 dark:ring-white/20'
-                        : 'text-text-muted hover:bg-black/5 dark:hover:bg-white/5 hover:text-text-main'}`}
-                    onClick={() => setView('projects')}
-                  >
-                    <Home size={20} className={`transition-transform duration-300 ${view === 'projects' ? 'scale-110' : 'group-hover:translate-x-1'}`} />
-                    <span>Projekty</span>
-                  </button>
-                  <button
-                    className={`flex items-center gap-4 px-4 py-3.5 rounded-2xl font-bold transition-all duration-300 group
-                      ${view === 'stories'
-                        ? 'bg-primary text-white shadow-xl shadow-primary/20 ring-1 ring-black/10 dark:ring-white/20'
-                        : 'text-text-muted hover:bg-black/5 dark:hover:bg-white/5 hover:text-text-main'}`}
-                    onClick={() => { setView('stories'); setActiveStoryId(null); }}
-                  >
-                    <List size={20} className={`transition-transform duration-300 ${view === 'stories' ? 'scale-110' : 'group-hover:translate-x-1'}`} />
-                    <span>Historyjki</span>
-                  </button>
-                  <button
-                    className={`flex items-center gap-4 px-4 py-3.5 rounded-2xl font-bold transition-all duration-300 group
-                      ${view === 'tasks'
-                        ? 'bg-primary text-white shadow-xl shadow-primary/20 ring-1 ring-black/10 dark:ring-white/20'
-                        : activeStoryId
-                          ? 'text-text-muted hover:bg-black/5 dark:hover:bg-white/5 hover:text-text-main'
-                          : 'text-text-muted opacity-40 cursor-not-allowed'}`}
-                    onClick={() => activeStoryId && setView('tasks')}
-                    disabled={!activeStoryId}
-                  >
-                    <ListTodo size={20} className={`transition-transform duration-300 ${view === 'tasks' ? 'scale-110' : 'group-hover:translate-x-1'}`} />
-                    <span>Zadania</span>
-                  </button>
-                </div>
-              </div>
-
-              <div className="space-y-3">
-                <p className="px-4 text-[10px] font-black uppercase tracking-[0.3em] text-text-muted">Inne</p>
-                <div className="flex flex-col gap-1.5 opacity-50 cursor-not-allowed">
-                  <button className="flex items-center gap-4 px-4 py-3.5 rounded-2xl font-bold text-text-muted">
-                    <Users size={20} />
-                    <span>Zespół</span>
-                  </button>
-                  <button className="flex items-center gap-4 px-4 py-3.5 rounded-2xl font-bold text-text-muted">
-                    <Settings size={20} />
-                    <span>Ustawienia</span>
-                  </button>
-                </div>
-              </div>
+          <aside className="w-56 shrink-0 border-r border-border bg-bg-sidebar flex flex-col py-5 overflow-y-auto">
+            <div className="px-3 space-y-0.5">
+              <p className="px-3 pb-2 text-[10px] font-semibold uppercase tracking-widest text-text-muted/60">Nawigacja</p>
+              {navItems.map(item => (
+                <button
+                  key={item.id}
+                  onClick={() => !item.disabled && setView(item.id)}
+                  disabled={item.disabled}
+                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all
+                    ${view === item.id
+                      ? 'bg-primary text-white shadow-sm shadow-primary/30'
+                      : item.disabled
+                      ? 'text-text-muted/30 cursor-not-allowed'
+                      : 'text-text-muted hover:text-text-main hover:bg-black/5 dark:hover:bg-white/5'
+                    }`}
+                >
+                  {item.icon}
+                  {item.label}
+                </button>
+              ))}
             </div>
 
-            <div className="p-6 bg-gradient-to-br from-primary/10 to-transparent border border-primary/20 rounded-[2rem] space-y-4 shadow-inner">
-              <div className="w-10 h-10 bg-primary/20 rounded-xl flex items-center justify-center text-primary">
-                <Bell size={20} className="animate-bounce" />
-              </div>
-              <div className="space-y-1">
-                <p className="text-xs font-black text-text-main">Wsparcie Techniczne</p>
-                <p className="text-[10px] font-medium text-text-muted leading-relaxed">Potrzebujesz pomocy? Nasz zespół jest dostępny 24/7.</p>
-              </div>
-              <button className="w-full py-2.5 bg-bg-sidebar/50 hover:bg-black/5 dark:hover:bg-white/5 rounded-xl border border-primary/20 text-[10px] font-black uppercase tracking-widest text-primary transition-all">Skontaktuj się</button>
+            <div className="mt-6 px-3 space-y-0.5">
+              <p className="px-3 pb-2 text-[10px] font-semibold uppercase tracking-widest text-text-muted/60">Narzędzia</p>
+              {[
+                { label: 'Zespół', icon: <Users size={17} /> },
+                { label: 'Ustawienia', icon: <Settings size={17} /> },
+              ].map(item => (
+                <button
+                  key={item.label}
+                  disabled
+                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-text-muted/30 cursor-not-allowed"
+                >
+                  {item.icon}
+                  {item.label}
+                </button>
+              ))}
             </div>
+
+            {/* Spacer */}
+            <div className="flex-1" />
+
+            {/* Current project indicator */}
+            <ProjectContext.Consumer>
+              {(ctx) => {
+                if (!ctx) return null
+                const activeProject = ctx.projects.find(p => p.id === ctx.activeProjectId)
+                if (!activeProject) return null
+                return (
+                  <div className="mx-3 p-3 rounded-xl bg-primary/8 border border-primary/20 mt-4">
+                    <p className="text-[10px] font-semibold uppercase tracking-widest text-primary/70 mb-1">Aktywny projekt</p>
+                    <p className="text-xs font-semibold text-text-main truncate flex items-center gap-1.5">
+                      <FolderKanban size={11} className="text-primary shrink-0" />
+                      {activeProject.name}
+                    </p>
+                  </div>
+                )
+              }}
+            </ProjectContext.Consumer>
           </aside>
 
-          {/* Main Content Area */}
-          <main className="flex-1 overflow-y-auto scroll-smooth">
+          {/* Main content */}
+          <main className="flex-1 overflow-y-auto dot-grid">
             <ProjectContext.Consumer>
-              {(context) => {
-                if (!context) return null;
-                const { activeProjectId, projects } = context;
-                const activeProject = projects.find(p => p.id === activeProjectId);
+              {(ctx) => {
+                if (!ctx) return null
+                const { activeProjectId, projects } = ctx
+                const activeProject = projects.find(p => p.id === activeProjectId)
 
                 return (
-                  <div className="p-10 max-w-[1600px] mx-auto min-h-full flex flex-col">
-                    <header className="flex items-center gap-3 mb-12 bg-bg-sidebar/30 w-fit px-5 py-2.5 rounded-2xl border border-border shadow-sm flex-wrap">
-                      <span className="text-sm font-bold text-text-muted">Panel Sterowania</span>
-                      <ChevronRight size={16} className="text-border" />
-                      <span className={`text-sm font-black uppercase tracking-widest ${view === 'projects' ? 'text-primary' : 'text-text-muted'}`}>
-                        {view === 'projects' ? 'Przegląd Projektów' : view === 'stories' ? 'Tablica Historyjek' : 'Tablica Zadań'}
+                  <div className="px-8 py-8 max-w-[1400px] mx-auto min-h-full flex flex-col">
+
+                    {/* Breadcrumb */}
+                    <nav className="flex items-center gap-2 mb-8 text-xs text-text-muted select-none">
+                      <span className="font-medium">ManageMe</span>
+                      <ChevronRight size={13} className="opacity-40" />
+                      <span className={`font-semibold ${view === 'projects' ? 'text-text-main' : ''}`}>
+                        {view === 'projects' ? 'Projekty' : view === 'stories' ? 'Historyjki' : 'Zadania'}
                       </span>
                       {activeProject && view !== 'projects' && (
                         <>
-                          <ChevronRight size={16} className="text-border" />
+                          <ChevronRight size={13} className="opacity-40" />
                           <button
                             onClick={() => setView('stories')}
-                            className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+                            className="font-semibold text-primary hover:underline underline-offset-2 transition-colors"
                           >
-                            <div className="w-2 h-2 rounded-full bg-primary shadow-[0_0_10px_rgba(99,102,241,0.8)]" />
-                            <span className="text-sm font-black text-text-main bg-primary/20 px-3 py-1 rounded-lg border border-primary/30">{activeProject.name}</span>
+                            {activeProject.name}
                           </button>
                         </>
                       )}
                       {view === 'tasks' && activeStoryId && (
                         <>
-                          <ChevronRight size={16} className="text-border" />
-                          <span className="text-sm font-black text-primary">Zadania</span>
+                          <ChevronRight size={13} className="opacity-40" />
+                          <span className="font-semibold text-text-main">Zadania</span>
                         </>
                       )}
-                    </header>
+                    </nav>
 
+                    {/* Content */}
                     <div className="flex-1">
                       {view === 'projects' && <ProjectList />}
                       {view === 'stories' && (
-                        activeProjectId ? (
-                          <StoryList onSelectStory={handleSelectStory} />
-                        ) : (
-                          <div className="flex-1 flex flex-col items-center justify-center py-32 bg-bg-sidebar/20 border border-dashed border-border rounded-[3rem] gap-8 text-center animate-fade-in group">
-                            <div className="relative">
-                              <div className="absolute inset-0 bg-primary/20 blur-3xl rounded-full scale-150 group-hover:scale-200 transition-transform duration-700" />
-                              <div className="relative p-12 bg-bg-sidebar rounded-full shadow-2xl border border-border">
-                                <Layout size={100} className="text-border group-hover:text-primary transition-colors duration-500" />
+                        activeProjectId
+                          ? <StoryList onSelectStory={handleSelectStory} />
+                          : (
+                            <div className="flex flex-col items-center justify-center py-28 gap-6 text-center animate-fade-in">
+                              <div className="p-8 bg-bg-sidebar border border-dashed border-border rounded-3xl opacity-40">
+                                <LayoutDashboard size={56} />
                               </div>
+                              <div className="space-y-2 max-w-sm">
+                                <h2 className="font-display text-2xl font-bold text-text-main">Brak aktywnego projektu</h2>
+                                <p className="text-sm text-text-muted leading-relaxed">
+                                  Wybierz projekt z listy, aby zarządzać jego historyjkami.
+                                </p>
+                              </div>
+                              <button
+                                className="px-5 py-2.5 bg-primary hover:bg-primary-hover text-white text-sm font-semibold rounded-xl shadow-lg shadow-primary/20 transition-all active:scale-95"
+                                onClick={() => setView('projects')}
+                              >
+                                Przejdź do projektów
+                              </button>
                             </div>
-                            <div className="space-y-3 max-w-md relative z-10">
-                              <h2 className="text-4xl font-black text-text-main tracking-tight italic">Nie wybrano projektu</h2>
-                              <p className="text-text-muted font-medium text-lg leading-relaxed">
-                                Tablica zadań wymaga kontekstu. Wybierz jeden z aktywnych projektów, aby zarządzać jego funkcjonalnościami.
-                              </p>
-                            </div>
-                            <button
-                              className="flex items-center gap-3 px-12 py-5 bg-primary hover:bg-primary-hover text-white font-black text-lg rounded-2xl shadow-2xl shadow-primary/30 hover:scale-105 active:scale-95 transition-all group relative overflow-hidden"
-                              onClick={() => setView('projects')}
-                            >
-                              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
-                              <Home size={24} className="stroke-[3px]" />
-                              <span>Wróć do listy projektów</span>
-                            </button>
-                          </div>
-                        )
+                          )
                       )}
                       {view === 'tasks' && activeStoryId && (
                         <TasksView storyId={activeStoryId} onBack={handleBack} />
                       )}
                     </div>
                   </div>
-                );
+                )
               }}
             </ProjectContext.Consumer>
           </main>

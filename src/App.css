@@ -1,35 +1,12 @@
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
 .animate-fade-in {
-  animation: fadeIn 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  animation: fadeIn 0.35s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
-.scroll-smooth::-webkit-scrollbar {
-  width: 6px;
-}
-
-.scroll-smooth::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.scroll-smooth::-webkit-scrollbar-thumb {
-  background: var(--color-border);
-  border-radius: 20px;
-}
-
-.scroll-smooth::-webkit-scrollbar-thumb:hover {
-  background: #6366f1;
-}
-
-.glass-active {
-  background: rgba(99, 102, 241, 0.1);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(99, 102, 241, 0.2);
-}
-
-input, textarea, select {
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+.font-display {
+  font-family: 'Bricolage Grotesque', system-ui, sans-serif;
 }

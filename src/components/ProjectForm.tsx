@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import type { Project } from '../types';
 import { useProjects } from '../hooks/useProjects';
-import { PlusCircle, Save, X, Layout } from 'lucide-react';
+import { FolderKanban, X } from 'lucide-react';
+import { Modal } from './ui/Modal';
+import { Button } from './ui/Button';
+import { TextField, TextAreaField } from './ui/FormField';
 
 interface ProjectFormProps {
   editProject?: Project;
@@ -10,20 +13,13 @@ interface ProjectFormProps {
 
 export const ProjectForm: React.FC<ProjectFormProps> = ({ editProject, onCancel }) => {
   const { addProject, updateProject } = useProjects();
-  const [formData, setFormData] = useState({
-    name: '',
-    description: '',
-  });
+  const [formData, setFormData] = useState({ name: '', description: '' });
 
   useEffect(() => {
-    if (editProject) {
-      setFormData({
-        name: editProject.name,
-        description: editProject.description,
-      });
-    } else {
-      setFormData({ name: '', description: '' });
-    }
+    setFormData(editProject
+      ? { name: editProject.name, description: editProject.description }
+      : { name: '', description: '' }
+    );
   }, [editProject]);
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -37,65 +33,58 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({ editProject, onCancel 
   };
 
   return (
-    <div className="w-full max-w-md bg-bg-sidebar p-8 rounded-2xl border border-border shadow-2xl animate-fade-in">
-      <div className="flex items-center gap-3 mb-8 border-b border-border pb-4">
-        <div className="p-2 bg-primary/10 rounded-lg text-primary">
-          {editProject ? <Save size={24} /> : <Layout size={24} />}
+    <Modal onClose={onCancel} maxWidth="max-w-lg">
+      {/* Header */}
+      <div className="flex items-center justify-between px-6 pt-6 pb-5 border-b border-border">
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-primary/10 rounded-lg text-primary">
+            <FolderKanban size={18} />
+          </div>
+          <div>
+            <h2 className="font-display text-lg font-bold text-text-main">
+              {editProject ? 'Edytuj projekt' : 'Nowy projekt'}
+            </h2>
+            <p className="text-xs text-text-muted mt-0.5">
+              {editProject ? 'Zaktualizuj dane projektu' : 'Wypełnij poniższe pola'}
+            </p>
+          </div>
         </div>
-        <h2 className="text-2xl font-bold text-text-main tracking-tight">
-          {editProject ? 'Edytuj Projekt' : 'Nowy Projekt'}
-        </h2>
+        <button
+          onClick={onCancel}
+          className="p-1.5 text-text-muted hover:text-text-main hover:bg-black/5 dark:hover:bg-white/5 rounded-lg transition-colors"
+        >
+          <X size={18} />
+        </button>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="space-y-2">
-          <label htmlFor="name" className="text-sm font-semibold text-text-muted px-1 block uppercase tracking-wider">
-            Nazwa Projektu
-          </label>
-          <input
-            id="name"
-            type="text"
-            placeholder="Wprowadź nazwę projektu..."
-            className="w-full px-4 py-3 bg-bg-dark border border-border rounded-xl text-text-main placeholder:text-gray-400 dark:placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all duration-200"
-            value={formData.name}
-            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-            required
-          />
-        </div>
+      {/* Form */}
+      <form onSubmit={handleSubmit} className="p-6 space-y-5">
+        <TextField
+          id="name"
+          label="Nazwa projektu"
+          placeholder="np. Aplikacja e-commerce"
+          value={formData.name}
+          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+          required
+          autoFocus
+        />
+        <TextAreaField
+          id="description"
+          label="Opis"
+          placeholder="Krótki opis projektu i jego celów..."
+          value={formData.description}
+          onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+          required
+          rows={4}
+        />
 
-        <div className="space-y-2">
-          <label htmlFor="description" className="text-sm font-semibold text-text-muted px-1 block uppercase tracking-wider">
-            Opis
-          </label>
-          <textarea
-            id="description"
-            placeholder="Wprowadź szczegółowy opis projektu..."
-            className="w-full px-4 py-3 bg-bg-dark border border-border rounded-xl text-text-main placeholder:text-gray-400 dark:placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all duration-200 resize-none"
-            value={formData.description}
-            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-            required
-            rows={5}
-          />
-        </div>
-
-        <div className="flex items-center justify-end gap-3 pt-4 border-t border-border mt-8">
-          <button 
-            type="button" 
-            onClick={onCancel} 
-            className="flex items-center gap-2 px-5 py-2.5 rounded-xl border border-border text-text-muted font-semibold hover:bg-gray-100 dark:hover:bg-slate-800 hover:text-text-main transition-all duration-200"
-          >
-            <X size={18} />
-            Anuluj
-          </button>
-          <button 
-            type="submit" 
-            className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-primary hover:bg-primary-hover text-white font-bold shadow-lg shadow-primary/20 transition-all duration-200"
-          >
-            {editProject ? <Save size={18} /> : <PlusCircle size={18} />}
-            {editProject ? 'Zapisz zmiany' : 'Stwórz projekt'}
-          </button>
+        <div className="flex justify-end gap-2.5 pt-2">
+          <Button type="button" variant="ghost" onClick={onCancel}>Anuluj</Button>
+          <Button type="submit" variant="primary">
+            {editProject ? 'Zapisz zmiany' : 'Utwórz projekt'}
+          </Button>
         </div>
       </form>
-    </div>
+    </Modal>
   );
 };

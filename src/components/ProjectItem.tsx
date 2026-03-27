@@ -1,7 +1,8 @@
 import React from 'react';
-import { Trash2, Edit2, Calendar, CheckCircle, ChevronRight } from 'lucide-react';
+import { Trash2, Pencil, Calendar, CheckCircle2, ArrowRight, Circle } from 'lucide-react';
 import type { Project } from '../types';
 import { useProjects } from '../hooks/useProjects';
+import { Button } from './ui/Button';
 
 interface ProjectItemProps {
   project: Project;
@@ -13,74 +14,79 @@ export const ProjectItem: React.FC<ProjectItemProps> = ({ project, onEdit }) => 
   const isActive = activeProjectId === project.id;
 
   return (
-    <div 
-      className={`group relative flex flex-col gap-6 p-7 bg-bg-sidebar border rounded-3xl transition-all duration-300 shadow-2xl overflow-hidden animate-fade-in
-      ${isActive 
-        ? 'border-primary ring-2 ring-primary/20 bg-primary/5 shadow-primary/10' 
-        : 'border-border hover:border-primary/50 hover:bg-black/5 dark:hover:bg-white/5 hover:-translate-y-2'}`}
+    <div
+      className={`group relative flex flex-col gap-5 p-6 rounded-2xl border transition-all duration-200 animate-fade-in overflow-hidden
+        ${isActive
+          ? 'bg-bg-sidebar border-primary/40 shadow-lg shadow-primary/5'
+          : 'bg-bg-sidebar border-border hover:border-zinc-300 dark:hover:border-zinc-600 hover:shadow-md hover:-translate-y-0.5'
+        }`}
     >
-      <div className="flex justify-between items-center relative z-10">
-        <div 
-          className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest transition-colors
-          ${isActive 
-            ? 'bg-primary text-white shadow-lg shadow-primary/20' 
-            : 'bg-border text-text-muted group-hover:bg-gray-300 dark:group-hover:bg-slate-700'}`}
+      {/* Active glow */}
+      {isActive && (
+        <div className="absolute -top-8 -right-8 w-32 h-32 bg-primary/10 rounded-full blur-2xl pointer-events-none" />
+      )}
+
+      {/* Top row */}
+      <div className="flex items-center justify-between relative z-10">
+        <div className={`flex items-center gap-2 px-2.5 py-1 rounded-full text-[11px] font-semibold uppercase tracking-wider
+          ${isActive
+            ? 'bg-primary/15 text-primary'
+            : 'bg-zinc-100 text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400'
+          }`}
         >
-          {isActive ? (
-            <CheckCircle size={10} className="stroke-[4px]" />
-          ) : (
-            <div className="w-2.5 h-2.5 rounded-full bg-slate-500 animate-pulse" />
-          )}
-          {isActive ? 'Aktualny Projekt' : 'Dostępny'}
+          {isActive
+            ? <CheckCircle2 size={11} className="shrink-0" />
+            : <Circle size={11} className="shrink-0 opacity-60" />
+          }
+          {isActive ? 'Aktywny projekt' : 'Dostępny'}
         </div>
-        <div className="flex items-center gap-2 text-xs font-bold text-text-muted">
-          <Calendar size={14} className="text-primary/60" />
-          {new Date().toLocaleDateString()}
+
+        <div className="flex items-center gap-1.5 text-[11px] font-mono text-text-muted">
+          <Calendar size={11} className="opacity-60" />
+          {new Date().toLocaleDateString('pl-PL', { day: '2-digit', month: 'short', year: 'numeric' })}
         </div>
       </div>
-      
-      <div className="flex flex-col gap-2 relative z-10">
-        <h3 className="text-2xl font-black text-text-main leading-none group-hover:text-primary transition-colors">
+
+      {/* Content */}
+      <div className="relative z-10 flex-1">
+        <h3 className={`font-display text-xl font-bold leading-tight mb-2 transition-colors
+          ${isActive ? 'text-text-main' : 'text-text-main group-hover:text-primary'}`}>
           {project.name}
         </h3>
-        <p className="text-text-muted leading-relaxed font-medium line-clamp-3">
+        <p className="text-sm text-text-muted leading-relaxed line-clamp-3">
           {project.description}
         </p>
       </div>
 
-      <div className="flex items-center justify-between gap-4 pt-6 border-t border-border mt-auto relative z-10">
-        <div className="flex gap-2">
-          <button 
-            onClick={() => onEdit(project)} 
-            className="p-3 bg-bg-dark border border-border rounded-xl text-text-muted hover:text-primary hover:border-primary/50 hover:bg-primary/10 transition-all shadow-sm"
-            title="Edytuj Projekt"
-          >
-            <Edit2 size={18} />
-          </button>
-          <button 
-            onClick={() => deleteProject(project.id)} 
-            className="p-3 bg-bg-dark border border-border rounded-xl text-text-muted hover:text-danger hover:border-danger/50 hover:bg-danger/10 transition-all shadow-sm"
-            title="Usuń Projekt"
-          >
-            <Trash2 size={18} />
-          </button>
+      {/* Footer */}
+      <div className="flex items-center justify-between pt-4 border-t border-border relative z-10">
+        <div className="flex gap-1.5">
+          <Button
+            variant="ghost"
+            size="sm"
+            icon={<Pencil size={13} />}
+            onClick={() => onEdit(project)}
+            title="Edytuj"
+          />
+          <Button
+            variant="ghost"
+            size="sm"
+            icon={<Trash2 size={13} />}
+            onClick={() => deleteProject(project.id)}
+            title="Usuń"
+            className="hover:text-danger hover:bg-danger/10"
+          />
         </div>
-        
-        <button 
-          onClick={() => setActiveProjectId(isActive ? null : project.id)} 
-          className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold transition-all shadow-lg
-          ${isActive 
-            ? 'bg-danger/10 border border-danger/20 text-danger hover:bg-danger hover:text-white hover:border-danger' 
-            : 'bg-primary text-white hover:bg-primary-hover shadow-primary/20 hover:scale-105 active:scale-95'}`}
-        >
-          <span>{isActive ? 'Odznacz' : 'Wybierz'}</span>
-          <ChevronRight size={18} className={`transition-transform duration-300 ${isActive ? 'rotate-180' : 'group-hover:translate-x-1'}`} />
-        </button>
-      </div>
 
-      {isActive && (
-        <div className="absolute top-0 right-0 w-32 h-32 -mr-16 -mt-16 bg-primary/20 blur-3xl rounded-full" />
-      )}
+        <Button
+          variant={isActive ? 'danger' : 'primary'}
+          size="sm"
+          icon={<ArrowRight size={13} className={isActive ? 'rotate-180' : ''} />}
+          onClick={() => setActiveProjectId(isActive ? null : project.id)}
+        >
+          {isActive ? 'Odznacz' : 'Wybierz'}
+        </Button>
+      </div>
     </div>
   );
 };
