@@ -53,7 +53,7 @@ export const TaskDetail: React.FC<TaskDetailProps> = ({ task, story, onClose }) 
       <div className="w-full max-w-2xl bg-bg-sidebar p-8 rounded-[2rem] border border-border shadow-2xl relative max-h-[90vh] overflow-y-auto">
         <button
           onClick={onClose}
-          className="absolute top-6 right-6 p-2 text-text-muted hover:text-white transition-colors hover:bg-white/5 rounded-full"
+          className="absolute top-6 right-6 p-2 text-text-muted hover:text-text-main transition-colors hover:bg-black/5 dark:hover:bg-white/5 rounded-full"
         >
           <X size={24} />
         </button>
@@ -126,7 +126,7 @@ export const TaskDetail: React.FC<TaskDetailProps> = ({ task, story, onClose }) 
           <p className="text-xs font-black uppercase tracking-widest text-text-muted mb-3">Przypisana osoba</p>
           {assignedUser ? (
             <div className="flex items-center gap-3 bg-bg-dark rounded-xl p-4 border border-border/50">
-              <div className="w-10 h-10 bg-gradient-to-tr from-slate-700 to-slate-800 border-2 border-border rounded-xl flex items-center justify-center font-black text-sm text-text-main">
+              <div className="w-10 h-10 bg-gradient-to-tr from-slate-100 to-slate-200 dark:from-slate-700 dark:to-slate-800 border-2 border-border rounded-xl flex items-center justify-center font-black text-sm text-text-main">
                 {assignedUser.firstName[0]}{assignedUser.lastName[0]}
               </div>
               <div>
@@ -158,10 +158,10 @@ export const TaskDetail: React.FC<TaskDetailProps> = ({ task, story, onClose }) 
                   className={`flex items-center gap-3 p-3 rounded-xl border transition-all text-left
                     ${u.id === task.assignedUserId
                       ? 'border-primary/40 bg-primary/10 cursor-default'
-                      : 'border-border hover:border-primary/50 hover:bg-white/5 cursor-pointer'
+                      : 'border-border hover:border-primary/50 hover:bg-black/5 dark:hover:bg-white/5 cursor-pointer'
                     }`}
                 >
-                  <div className="w-9 h-9 bg-gradient-to-tr from-slate-700 to-slate-800 border border-border rounded-lg flex items-center justify-center font-black text-xs text-text-main shrink-0">
+                  <div className="w-9 h-9 bg-gradient-to-tr from-slate-100 to-slate-200 dark:from-slate-700 dark:to-slate-800 border border-border rounded-lg flex items-center justify-center font-black text-xs text-text-main shrink-0">
                     {u.firstName[0]}{u.lastName[0]}
                   </div>
                   <div className="flex-1">

@@ -51,7 +51,7 @@ export const TaskBoard: React.FC<TaskBoardProps> = ({ story }) => {
       <div
         key={task.id}
         onClick={() => setSelectedTask(task)}
-        className="group bg-bg-sidebar border border-border p-5 rounded-2xl transition-all duration-300 hover:border-primary/50 hover:bg-white/5 hover:translate-x-1 shadow-lg cursor-pointer"
+        className="group bg-bg-sidebar border border-border p-5 rounded-2xl transition-all duration-300 hover:border-primary/50 hover:bg-black/5 dark:hover:bg-white/5 hover:translate-x-1 shadow-lg cursor-pointer"
       >
         <div className="flex justify-between items-start mb-4">
           <span className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border ${getPriorityColor(task.priority)}`}>
@@ -97,7 +97,7 @@ export const TaskBoard: React.FC<TaskBoardProps> = ({ story }) => {
 
         {assignedUser && (
           <div className="flex items-center gap-2 pt-3 border-t border-border/50">
-            <div className="w-6 h-6 bg-gradient-to-tr from-slate-700 to-slate-800 border border-border rounded-md flex items-center justify-center font-black text-[10px] text-text-main">
+            <div className="w-6 h-6 bg-gradient-to-tr from-slate-100 to-slate-200 dark:from-slate-700 dark:to-slate-800 border border-border rounded-md flex items-center justify-center font-black text-[10px] text-text-main">
               {assignedUser.firstName[0]}{assignedUser.lastName[0]}
             </div>
             <span className="text-[11px] font-bold text-text-muted">{assignedUser.firstName} {assignedUser.lastName}</span>

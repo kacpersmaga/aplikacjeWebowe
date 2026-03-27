@@ -36,7 +36,7 @@ export const StoryList: React.FC<StoryListProps> = ({ onSelectStory }) => {
   const renderStoryCard = (story: Story) => (
     <div 
       key={story.id} 
-      className="group bg-bg-sidebar border border-border p-5 rounded-2xl transition-all duration-300 hover:border-primary/50 hover:bg-white/5 hover:translate-x-1 shadow-lg"
+      className="group bg-bg-sidebar border border-border p-5 rounded-2xl transition-all duration-300 hover:border-primary/50 hover:bg-black/5 dark:hover:bg-white/5 hover:translate-x-1 shadow-lg"
     >
       <div className="flex justify-between items-start mb-4">
         <span className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border ${getPriorityColor(story.priority)}`}>

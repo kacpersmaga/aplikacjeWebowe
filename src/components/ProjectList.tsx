@@ -51,7 +51,7 @@ export const ProjectList: React.FC = () => {
               placeholder="Szukaj projektów..." 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-12 pr-4 py-3.5 bg-bg-sidebar border border-border rounded-2xl text-text-main placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all shadow-inner shadow-black/10"
+              className="w-full pl-12 pr-4 py-3.5 bg-bg-sidebar border border-border rounded-2xl text-text-main placeholder:text-gray-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all shadow-inner shadow-black/10"
             />
           </div>
           <button 

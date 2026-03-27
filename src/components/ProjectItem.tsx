@@ -17,14 +17,14 @@ export const ProjectItem: React.FC<ProjectItemProps> = ({ project, onEdit }) => 
       className={`group relative flex flex-col gap-6 p-7 bg-bg-sidebar border rounded-3xl transition-all duration-300 shadow-2xl overflow-hidden animate-fade-in
       ${isActive 
         ? 'border-primary ring-2 ring-primary/20 bg-primary/5 shadow-primary/10' 
-        : 'border-border hover:border-primary/50 hover:bg-white/5 hover:-translate-y-2'}`}
+        : 'border-border hover:border-primary/50 hover:bg-black/5 dark:hover:bg-white/5 hover:-translate-y-2'}`}
     >
       <div className="flex justify-between items-center relative z-10">
         <div 
           className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest transition-colors
           ${isActive 
             ? 'bg-primary text-white shadow-lg shadow-primary/20' 
-            : 'bg-border text-text-muted group-hover:bg-slate-700'}`}
+            : 'bg-border text-text-muted group-hover:bg-gray-300 dark:group-hover:bg-slate-700'}`}
         >
           {isActive ? (
             <CheckCircle size={10} className="stroke-[4px]" />

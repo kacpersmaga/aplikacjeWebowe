@@ -39,7 +39,7 @@ export const TaskForm: React.FC<TaskFormProps> = ({ onClose, taskToEdit }) => {
       <div className="w-full max-w-2xl bg-bg-sidebar p-8 rounded-[2rem] border border-border shadow-2xl relative">
         <button
           onClick={onClose}
-          className="absolute top-6 right-6 p-2 text-text-muted hover:text-white transition-colors hover:bg-white/5 rounded-full"
+          className="absolute top-6 right-6 p-2 text-text-muted hover:text-text-main transition-colors hover:bg-black/5 dark:hover:bg-white/5 rounded-full"
         >
           <X size={24} />
         </button>
@@ -67,7 +67,7 @@ export const TaskForm: React.FC<TaskFormProps> = ({ onClose, taskToEdit }) => {
                   type="text"
                   id="name"
                   placeholder="Co trzeba zrobić?"
-                  className="w-full px-4 py-3.5 bg-bg-dark border border-border rounded-xl text-text-main placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all duration-200"
+                  className="w-full px-4 py-3.5 bg-bg-dark border border-border rounded-xl text-text-main placeholder:text-gray-400 dark:placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all duration-200"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   required
@@ -115,7 +115,7 @@ export const TaskForm: React.FC<TaskFormProps> = ({ onClose, taskToEdit }) => {
               <textarea
                 id="description"
                 placeholder="Opisz szczegółowo zadanie..."
-                className="w-full h-full px-4 py-4 bg-bg-dark border border-border rounded-xl text-text-main placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all duration-200 resize-none"
+                className="w-full h-full px-4 py-4 bg-bg-dark border border-border rounded-xl text-text-main placeholder:text-gray-400 dark:placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all duration-200 resize-none"
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 required
@@ -128,7 +128,7 @@ export const TaskForm: React.FC<TaskFormProps> = ({ onClose, taskToEdit }) => {
             <button
               type="button"
               onClick={onClose}
-              className="px-6 py-3 rounded-xl border border-border text-text-muted font-bold hover:bg-slate-800 hover:text-white transition-all shadow-lg"
+              className="px-6 py-3 rounded-xl border border-border text-text-muted font-bold hover:bg-gray-100 dark:hover:bg-slate-800 hover:text-text-main transition-all shadow-lg"
             >
               Anuluj
             </button>

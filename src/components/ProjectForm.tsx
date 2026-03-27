@@ -56,7 +56,7 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({ editProject, onCancel 
             id="name"
             type="text"
             placeholder="Wprowadź nazwę projektu..."
-            className="w-full px-4 py-3 bg-bg-dark border border-border rounded-xl text-text-main placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all duration-200"
+            className="w-full px-4 py-3 bg-bg-dark border border-border rounded-xl text-text-main placeholder:text-gray-400 dark:placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all duration-200"
             value={formData.name}
             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
             required
@@ -70,7 +70,7 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({ editProject, onCancel 
           <textarea
             id="description"
             placeholder="Wprowadź szczegółowy opis projektu..."
-            className="w-full px-4 py-3 bg-bg-dark border border-border rounded-xl text-text-main placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all duration-200 resize-none"
+            className="w-full px-4 py-3 bg-bg-dark border border-border rounded-xl text-text-main placeholder:text-gray-400 dark:placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all duration-200 resize-none"
             value={formData.description}
             onChange={(e) => setFormData({ ...formData, description: e.target.value })}
             required
@@ -82,7 +82,7 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({ editProject, onCancel 
           <button 
             type="button" 
             onClick={onCancel} 
-            className="flex items-center gap-2 px-5 py-2.5 rounded-xl border border-border text-text-muted font-semibold hover:bg-slate-800 hover:text-text-main transition-all duration-200"
+            className="flex items-center gap-2 px-5 py-2.5 rounded-xl border border-border text-text-muted font-semibold hover:bg-gray-100 dark:hover:bg-slate-800 hover:text-text-main transition-all duration-200"
           >
             <X size={18} />
             Anuluj
