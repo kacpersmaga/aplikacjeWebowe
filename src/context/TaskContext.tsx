@@ -3,6 +3,8 @@ import type { ReactNode } from 'react';
 import type { Task } from '../types';
 import { taskService } from '../services/taskService';
 import { storyService } from '../services/storyService';
+import { userService } from '../services/userService';
+import { useNotifications } from './NotificationContext';
 
 interface TaskContextType {
   tasks: Task[];
@@ -24,6 +26,7 @@ interface TaskProviderProps {
 }
 
 export const TaskProvider = ({ children, storyId, onStoryStatusChange }: TaskProviderProps) => {
+  const { addNotification } = useNotifications();
   const [tasks, setTasks] = useState<Task[]>([]);
 
   const loadTasks = useCallback(() => {
@@ -46,7 +49,17 @@ export const TaskProvider = ({ children, storyId, onStoryStatusChange }: TaskPro
   };
 
   const addTask = (task: Omit<Task, 'id' | 'createdAt'>) => {
-    taskService.create(task);
+    const created = taskService.create(task);
+    // Notify story owner (medium)
+    const story = storyService.getAll().find(s => s.id === created.storyId);
+    if (story) {
+      addNotification({
+        title: 'Nowe zadanie',
+        message: `Dodano zadanie „${created.name}" do historyjki „${story.name}".`,
+        priority: 'medium',
+        recipientId: story.ownerId,
+      });
+    }
     loadTasks();
   };
 
@@ -71,6 +84,25 @@ export const TaskProvider = ({ children, storyId, onStoryStatusChange }: TaskPro
       onStoryStatusChange?.();
     }
 
+    // Notify assigned user (high)
+    const assignedUser = userService.getUserById(userId);
+    addNotification({
+      title: 'Przypisano do zadania',
+      message: `Zostałeś/aś przypisany/a do zadania „${task.name}"${story ? ` w historyjce „${story.name}"` : ''}.`,
+      priority: 'high',
+      recipientId: userId,
+    });
+
+    // Notify story owner: task status changed to doing (low)
+    if (story && story.ownerId !== userId) {
+      addNotification({
+        title: 'Zmiana statusu zadania',
+        message: `Zadanie „${task.name}" w historyjce „${story.name}" zmieniło status na: W trakcie.${assignedUser ? ` Przypisano: ${assignedUser.firstName} ${assignedUser.lastName}.` : ''}`,
+        priority: 'low',
+        recipientId: story.ownerId,
+      });
+    }
+
     loadTasks();
   };
 
@@ -83,6 +115,17 @@ export const TaskProvider = ({ children, storyId, onStoryStatusChange }: TaskPro
       endDate: new Date().toISOString(),
     });
 
+    // Notify story owner: task status changed to done (medium)
+    const story = storyService.getAll().find(s => s.id === task.storyId);
+    if (story) {
+      addNotification({
+        title: 'Zmiana statusu zadania',
+        message: `Zadanie „${task.name}" w historyjce „${story.name}" zostało ukończone.`,
+        priority: 'medium',
+        recipientId: story.ownerId,
+      });
+    }
+
     syncStoryStatus(task.storyId);
     loadTasks();
   };
@@ -90,7 +133,20 @@ export const TaskProvider = ({ children, storyId, onStoryStatusChange }: TaskPro
   const deleteTask = (id: string) => {
     const task = taskService.getById(id);
     taskService.delete(id);
-    if (task) syncStoryStatus(task.storyId);
+
+    // Notify story owner: task deleted (medium)
+    if (task) {
+      const story = storyService.getAll().find(s => s.id === task.storyId);
+      if (story) {
+        addNotification({
+          title: 'Usunięto zadanie',
+          message: `Zadanie „${task.name}" zostało usunięte z historyjki „${story.name}".`,
+          priority: 'medium',
+          recipientId: story.ownerId,
+        });
+      }
+      syncStoryStatus(task.storyId);
+    }
     loadTasks();
   };
 
