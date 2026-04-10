@@ -1,0 +1,79 @@
+import { createContext, useState, useCallback, useContext, useEffect } from 'react';
+import type { ReactNode } from 'react';
+import type { Notification } from '../types';
+import { notificationService } from '../services/notificationService';
+import { userService } from '../services/userService';
+
+interface NotificationContextType {
+  notifications: Notification[];
+  unreadCount: number;
+  addNotification: (data: Omit<Notification, 'id' | 'date' | 'isRead'>) => void;
+  markAsRead: (id: string) => void;
+  markAllAsRead: () => void;
+  dialogQueue: Notification[];
+  dismissDialog: () => void;
+  loadNotifications: () => void;
+}
+
+const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
+
+export const NotificationProvider = ({ children }: { children: ReactNode }) => {
+  const currentUser = userService.getCurrentUser();
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [dialogQueue, setDialogQueue] = useState<Notification[]>([]);
+
+  const loadNotifications = useCallback(() => {
+    setNotifications(notificationService.getForUser(currentUser.id));
+  }, [currentUser.id]);
+
+  useEffect(() => {
+    loadNotifications();
+  }, [loadNotifications]);
+
+  const addNotification = useCallback((data: Omit<Notification, 'id' | 'date' | 'isRead'>) => {
+    const created = notificationService.create(data);
+    if (created.recipientId === currentUser.id) {
+      loadNotifications();
+      if (created.priority === 'medium' || created.priority === 'high') {
+        setDialogQueue(prev => [...prev, created]);
+      }
+    }
+  }, [currentUser.id, loadNotifications]);
+
+  const markAsRead = useCallback((id: string) => {
+    notificationService.markAsRead(id);
+    loadNotifications();
+  }, [loadNotifications]);
+
+  const markAllAsRead = useCallback(() => {
+    notificationService.markAllAsRead(currentUser.id);
+    loadNotifications();
+  }, [currentUser.id, loadNotifications]);
+
+  const dismissDialog = useCallback(() => {
+    setDialogQueue(prev => prev.slice(1));
+  }, []);
+
+  const unreadCount = notifications.filter(n => !n.isRead).length;
+
+  return (
+    <NotificationContext.Provider value={{
+      notifications,
+      unreadCount,
+      addNotification,
+      markAsRead,
+      markAllAsRead,
+      dialogQueue,
+      dismissDialog,
+      loadNotifications,
+    }}>
+      {children}
+    </NotificationContext.Provider>
+  );
+};
+
+export const useNotifications = () => {
+  const context = useContext(NotificationContext);
+  if (!context) throw new Error('useNotifications must be used within a NotificationProvider');
+  return context;
+};

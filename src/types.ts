@@ -40,3 +40,16 @@ export interface Task {
   endDate?: string;
   assignedUserId?: string;
 }
+
+type ISOString = string;
+type UserID = string;
+
+export interface Notification {
+  id: string;
+  title: string;
+  message: string;
+  date: ISOString;
+  priority: 'low' | 'medium' | 'high';
+  isRead: boolean;
+  recipientId: UserID;
+}
