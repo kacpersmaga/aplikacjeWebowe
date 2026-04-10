@@ -1,11 +1,15 @@
 import React, { useState } from 'react'
 import './App.css'
+import { NotificationProvider } from './context/NotificationContext'
 import { ProjectProvider, ProjectContext } from './context/ProjectContext'
 import { StoryProvider, useStories } from './context/StoryContext'
 import { TaskProvider } from './context/TaskContext'
 import { ProjectList } from './components/ProjectList'
 import { StoryList } from './components/StoryList'
 import { TaskBoard } from './components/TaskBoard'
+import { NotificationBell } from './components/notifications/NotificationBell'
+import { NotificationDialog } from './components/notifications/NotificationDialog'
+import { NotificationList } from './components/notifications/NotificationList'
 import { userService } from './services/userService'
 import { useDarkMode } from './hooks/useDarkMode'
 import {
@@ -13,7 +17,7 @@ import {
   Bell, Search, Sun, Moon, ChevronRight, FolderKanban,
 } from 'lucide-react'
 
-type View = 'projects' | 'stories' | 'tasks'
+type View = 'projects' | 'stories' | 'tasks' | 'notifications'
 
 const ROLE_LABELS: Record<string, string> = {
   admin: 'Admin',
@@ -58,7 +62,15 @@ const AppContent: React.FC = () => {
     { id: 'projects' as View, label: 'Projekty', icon: <LayoutDashboard size={17} /> },
     { id: 'stories' as View, label: 'Historyjki', icon: <List size={17} /> },
     { id: 'tasks' as View, label: 'Zadania', icon: <ListTodo size={17} />, disabled: !activeStoryId },
+    { id: 'notifications' as View, label: 'Powiadomienia', icon: <Bell size={17} /> },
   ]
+
+  const VIEW_LABELS: Record<View, string> = {
+    projects: 'Projekty',
+    stories: 'Historyjki',
+    tasks: 'Zadania',
+    notifications: 'Powiadomienia',
+  }
 
   return (
     <StoryProvider>
@@ -119,11 +131,8 @@ const AppContent: React.FC = () => {
               {isDark ? <Sun size={17} /> : <Moon size={17} />}
             </button>
 
-            {/* Notifications */}
-            <button className="relative p-2 text-text-muted hover:text-text-main hover:bg-black/5 dark:hover:bg-white/5 rounded-lg transition-colors">
-              <Bell size={17} />
-              <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-danger rounded-full ring-2 ring-bg-sidebar" />
-            </button>
+            {/* Notifications bell */}
+            <NotificationBell onClick={() => setView('notifications')} />
 
             {/* User */}
             <div className="flex items-center gap-2.5 pl-2 border-l border-border">
@@ -220,10 +229,10 @@ const AppContent: React.FC = () => {
                     <nav className="flex items-center gap-2 mb-8 text-xs text-text-muted select-none">
                       <span className="font-medium">ManageMe</span>
                       <ChevronRight size={13} className="opacity-40" />
-                      <span className={`font-semibold ${view === 'projects' ? 'text-text-main' : ''}`}>
-                        {view === 'projects' ? 'Projekty' : view === 'stories' ? 'Historyjki' : 'Zadania'}
+                      <span className={`font-semibold ${view === 'projects' || view === 'notifications' ? 'text-text-main' : ''}`}>
+                        {VIEW_LABELS[view]}
                       </span>
-                      {activeProject && view !== 'projects' && (
+                      {activeProject && view !== 'projects' && view !== 'notifications' && (
                         <>
                           <ChevronRight size={13} className="opacity-40" />
                           <button
@@ -245,6 +254,7 @@ const AppContent: React.FC = () => {
                     {/* Content */}
                     <div className="flex-1">
                       {view === 'projects' && <ProjectList />}
+                      {view === 'notifications' && <NotificationList />}
                       {view === 'stories' && (
                         activeProjectId
                           ? <StoryList onSelectStory={handleSelectStory} />
@@ -278,6 +288,9 @@ const AppContent: React.FC = () => {
             </ProjectContext.Consumer>
           </main>
         </div>
+
+        {/* Notification toast dialog (outside main scroll area) */}
+        <NotificationDialog />
       </div>
     </StoryProvider>
   )
@@ -285,9 +298,11 @@ const AppContent: React.FC = () => {
 
 function App() {
   return (
-    <ProjectProvider>
-      <AppContent />
-    </ProjectProvider>
+    <NotificationProvider>
+      <ProjectProvider>
+        <AppContent />
+      </ProjectProvider>
+    </NotificationProvider>
   )
 }
 
