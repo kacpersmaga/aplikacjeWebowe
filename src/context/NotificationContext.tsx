@@ -2,7 +2,7 @@ import { createContext, useState, useCallback, useContext, useEffect } from 'rea
 import type { ReactNode } from 'react';
 import type { Notification } from '../types';
 import { notificationService } from '../services/notificationService';
-import { userService } from '../services/userService';
+import { useAuth } from './AuthContext';
 
 interface NotificationContextType {
   notifications: Notification[];
@@ -18,37 +18,48 @@ interface NotificationContextType {
 const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
 
 export const NotificationProvider = ({ children }: { children: ReactNode }) => {
-  const currentUser = userService.getCurrentUser();
+  const { currentUser } = useAuth();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [dialogQueue, setDialogQueue] = useState<Notification[]>([]);
 
   const loadNotifications = useCallback(() => {
+    if (!currentUser) {
+      setNotifications([]);
+      return;
+    }
     setNotifications(notificationService.getForUser(currentUser.id));
-  }, [currentUser.id]);
+  }, [currentUser?.id]);
 
   useEffect(() => {
     loadNotifications();
   }, [loadNotifications]);
 
-  const addNotification = useCallback((data: Omit<Notification, 'id' | 'date' | 'isRead'>) => {
-    const created = notificationService.create(data);
-    if (created.recipientId === currentUser.id) {
-      loadNotifications();
-      if (created.priority === 'medium' || created.priority === 'high') {
-        setDialogQueue(prev => [...prev, created]);
+  const addNotification = useCallback(
+    (data: Omit<Notification, 'id' | 'date' | 'isRead'>) => {
+      const created = notificationService.create(data);
+      if (currentUser && created.recipientId === currentUser.id) {
+        loadNotifications();
+        if (created.priority === 'medium' || created.priority === 'high') {
+          setDialogQueue(prev => [...prev, created]);
+        }
       }
-    }
-  }, [currentUser.id, loadNotifications]);
+    },
+    [currentUser?.id, loadNotifications]
+  );
 
-  const markAsRead = useCallback((id: string) => {
-    notificationService.markAsRead(id);
-    loadNotifications();
-  }, [loadNotifications]);
+  const markAsRead = useCallback(
+    (id: string) => {
+      notificationService.markAsRead(id);
+      loadNotifications();
+    },
+    [loadNotifications]
+  );
 
   const markAllAsRead = useCallback(() => {
+    if (!currentUser) return;
     notificationService.markAllAsRead(currentUser.id);
     loadNotifications();
-  }, [currentUser.id, loadNotifications]);
+  }, [currentUser?.id, loadNotifications]);
 
   const dismissDialog = useCallback(() => {
     setDialogQueue(prev => prev.slice(1));
@@ -57,16 +68,18 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
   const unreadCount = notifications.filter(n => !n.isRead).length;
 
   return (
-    <NotificationContext.Provider value={{
-      notifications,
-      unreadCount,
-      addNotification,
-      markAsRead,
-      markAllAsRead,
-      dialogQueue,
-      dismissDialog,
-      loadNotifications,
-    }}>
+    <NotificationContext.Provider
+      value={{
+        notifications,
+        unreadCount,
+        addNotification,
+        markAsRead,
+        markAllAsRead,
+        dialogQueue,
+        dismissDialog,
+        loadNotifications,
+      }}
+    >
       {children}
     </NotificationContext.Provider>
   );

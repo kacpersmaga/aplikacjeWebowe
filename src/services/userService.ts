@@ -1,49 +1,59 @@
-import type { User } from '../types';
+import type { User, Role } from '../types';
 
-const MOCK_USERS: User[] = [
-  {
-    id: 'user-1',
-    firstName: 'Kacper',
-    lastName: 'Smaga',
-    role: 'admin',
-  },
-  {
-    id: 'user-2',
-    firstName: 'Jan',
-    lastName: 'Kowalski',
-    role: 'developer',
-  },
-  {
-    id: 'user-3',
-    firstName: 'Anna',
-    lastName: 'Nowak',
-    role: 'devops',
-  },
-  {
-    id: 'user-4',
-    firstName: 'Piotr',
-    lastName: 'Wiśniewski',
-    role: 'developer',
-  },
-];
+const USERS_KEY = 'manageme_users';
 
 class UserService {
-  private currentUserId = 'user-1';
-
-  getCurrentUser(): User {
-    return MOCK_USERS.find(u => u.id === this.currentUserId)!;
-  }
-
   getAllUsers(): User[] {
-    return MOCK_USERS;
+    const data = localStorage.getItem(USERS_KEY);
+    return data ? JSON.parse(data) : [];
   }
 
-  getAssignableUsers(): User[] {
-    return MOCK_USERS.filter(u => u.role === 'developer' || u.role === 'devops');
+  private saveAll(users: User[]): void {
+    localStorage.setItem(USERS_KEY, JSON.stringify(users));
+  }
+
+  saveUser(user: User): User {
+    const users = this.getAllUsers();
+    const idx = users.findIndex(u => u.id === user.id);
+    if (idx >= 0) {
+      users[idx] = user;
+    } else {
+      users.push(user);
+    }
+    this.saveAll(users);
+    return user;
   }
 
   getUserById(id: string): User | undefined {
-    return MOCK_USERS.find(u => u.id === id);
+    return this.getAllUsers().find(u => u.id === id);
+  }
+
+  getUserByEmail(email: string): User | undefined {
+    return this.getAllUsers().find(u => u.email === email);
+  }
+
+  updateUserRole(id: string, role: Role): void {
+    const users = this.getAllUsers();
+    const user = users.find(u => u.id === id);
+    if (user) {
+      user.role = role;
+      this.saveAll(users);
+    }
+  }
+
+  setBlocked(id: string, blocked: boolean): void {
+    const users = this.getAllUsers();
+    const user = users.find(u => u.id === id);
+    if (user) {
+      user.blocked = blocked;
+      this.saveAll(users);
+    }
+  }
+
+  getAssignableUsers(): User[] {
+    return this.getAllUsers().filter(
+      u => (u.role === 'developer' || u.role === 'devops') && !u.blocked
+    );
   }
 }
 

@@ -4,13 +4,16 @@ export interface Project {
   description: string;
 }
 
-export type Role = 'admin' | 'devops' | 'developer';
+export type Role = 'admin' | 'devops' | 'developer' | 'guest';
 
 export interface User {
   id: string;
+  email: string;
   firstName: string;
   lastName: string;
   role: Role;
+  blocked?: boolean;
+  photoURL?: string;
 }
 
 export type Priority = 'low' | 'medium' | 'high';

@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import './App.css'
+import { AuthProvider, useAuth } from './context/AuthContext'
 import { NotificationProvider } from './context/NotificationContext'
 import { ProjectProvider, ProjectContext } from './context/ProjectContext'
 import { StoryProvider, useStories } from './context/StoryContext'
@@ -10,25 +11,29 @@ import { TaskBoard } from './components/TaskBoard'
 import { NotificationBell } from './components/notifications/NotificationBell'
 import { NotificationDialog } from './components/notifications/NotificationDialog'
 import { NotificationList } from './components/notifications/NotificationList'
-import { userService } from './services/userService'
+import { LoginPage } from './components/LoginPage'
+import { PendingApproval } from './components/PendingApproval'
+import { UserList } from './components/UserList'
 import { useDarkMode } from './hooks/useDarkMode'
 import {
-  LayoutDashboard, List, ListTodo, Users, Settings,
-  Bell, Search, Sun, Moon, ChevronRight, FolderKanban,
+  LayoutDashboard, List, ListTodo, Bell, Search, Sun, Moon,
+  ChevronRight, FolderKanban, Users, LogOut, Shield,
 } from 'lucide-react'
 
-type View = 'projects' | 'stories' | 'tasks' | 'notifications'
+type View = 'projects' | 'stories' | 'tasks' | 'notifications' | 'users'
 
 const ROLE_LABELS: Record<string, string> = {
   admin: 'Admin',
   developer: 'Developer',
   devops: 'DevOps',
+  guest: 'Gość',
 }
 
 const ROLE_COLORS: Record<string, string> = {
   admin: 'text-violet-500',
   developer: 'text-sky-500',
   devops: 'text-emerald-500',
+  guest: 'text-amber-500',
 }
 
 const TasksView: React.FC<{ storyId: string; onBack: () => void }> = ({ storyId, onBack }) => {
@@ -50,13 +55,15 @@ const TasksView: React.FC<{ storyId: string; onBack: () => void }> = ({ storyId,
 }
 
 const AppContent: React.FC = () => {
-  const user = userService.getCurrentUser()
+  const { currentUser, logoutUser } = useAuth()
   const [view, setView] = useState<View>('projects')
   const [activeStoryId, setActiveStoryId] = useState<string | null>(null)
   const { isDark, toggle } = useDarkMode()
 
   const handleSelectStory = (storyId: string) => { setActiveStoryId(storyId); setView('tasks') }
   const handleBack = () => { setView('stories'); setActiveStoryId(null) }
+
+  const isAdmin = currentUser?.role === 'admin'
 
   const navItems = [
     { id: 'projects' as View, label: 'Projekty', icon: <LayoutDashboard size={17} /> },
@@ -70,7 +77,10 @@ const AppContent: React.FC = () => {
     stories: 'Historyjki',
     tasks: 'Zadania',
     notifications: 'Powiadomienia',
+    users: 'Użytkownicy',
   }
+
+  if (!currentUser) return null
 
   return (
     <StoryProvider>
@@ -92,7 +102,7 @@ const AppContent: React.FC = () => {
           {/* Divider */}
           <div className="h-5 w-px bg-border shrink-0" />
 
-          {/* Nav items (inline in header on large screens) */}
+          {/* Nav items */}
           <nav className="hidden md:flex items-center gap-1">
             {navItems.map(item => (
               <button
@@ -137,14 +147,18 @@ const AppContent: React.FC = () => {
             {/* User */}
             <div className="flex items-center gap-2.5 pl-2 border-l border-border">
               <div className="hidden lg:block text-right">
-                <p className="text-xs font-semibold text-text-main leading-none">{user.firstName} {user.lastName}</p>
-                <p className={`text-[10px] font-mono mt-0.5 ${ROLE_COLORS[user.role] ?? 'text-primary'}`}>
-                  {ROLE_LABELS[user.role]}
+                <p className="text-xs font-semibold text-text-main leading-none">{currentUser.firstName} {currentUser.lastName}</p>
+                <p className={`text-[10px] font-mono mt-0.5 ${ROLE_COLORS[currentUser.role] ?? 'text-primary'}`}>
+                  {ROLE_LABELS[currentUser.role]}
                 </p>
               </div>
-              <div className="w-8 h-8 bg-gradient-to-tr from-slate-100 to-slate-200 dark:from-slate-700 dark:to-slate-800 border border-border rounded-lg flex items-center justify-center font-bold text-xs text-text-main shrink-0">
-                {user.firstName[0]}{user.lastName[0]}
-              </div>
+              {currentUser.photoURL ? (
+                <img src={currentUser.photoURL} alt="avatar" className="w-8 h-8 rounded-lg object-cover shrink-0 border border-border" />
+              ) : (
+                <div className="w-8 h-8 bg-gradient-to-tr from-slate-100 to-slate-200 dark:from-slate-700 dark:to-slate-800 border border-border rounded-lg flex items-center justify-center font-bold text-xs text-text-main shrink-0">
+                  {currentUser.firstName[0]}{currentUser.lastName[0]}
+                </div>
+              )}
             </div>
           </div>
         </header>
@@ -175,22 +189,23 @@ const AppContent: React.FC = () => {
               ))}
             </div>
 
-            <div className="mt-6 px-3 space-y-0.5">
-              <p className="px-3 pb-2 text-[10px] font-semibold uppercase tracking-widest text-text-muted/60">Narzędzia</p>
-              {[
-                { label: 'Zespół', icon: <Users size={17} /> },
-                { label: 'Ustawienia', icon: <Settings size={17} /> },
-              ].map(item => (
+            {/* Admin tools */}
+            {isAdmin && (
+              <div className="mt-6 px-3 space-y-0.5">
+                <p className="px-3 pb-2 text-[10px] font-semibold uppercase tracking-widest text-text-muted/60">Administracja</p>
                 <button
-                  key={item.label}
-                  disabled
-                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-text-muted/30 cursor-not-allowed"
+                  onClick={() => setView('users')}
+                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all
+                    ${view === 'users'
+                      ? 'bg-primary text-white shadow-sm shadow-primary/30'
+                      : 'text-text-muted hover:text-text-main hover:bg-black/5 dark:hover:bg-white/5'
+                    }`}
                 >
-                  {item.icon}
-                  {item.label}
+                  <Users size={17} />
+                  Użytkownicy
                 </button>
-              ))}
-            </div>
+              </div>
+            )}
 
             {/* Spacer */}
             <div className="flex-1" />
@@ -212,6 +227,17 @@ const AppContent: React.FC = () => {
                 )
               }}
             </ProjectContext.Consumer>
+
+            {/* Logout */}
+            <div className="px-3 mt-3">
+              <button
+                onClick={logoutUser}
+                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-text-muted hover:text-danger hover:bg-danger/5 transition-all"
+              >
+                <LogOut size={17} />
+                Wyloguj się
+              </button>
+            </div>
           </aside>
 
           {/* Main content */}
@@ -229,10 +255,10 @@ const AppContent: React.FC = () => {
                     <nav className="flex items-center gap-2 mb-8 text-xs text-text-muted select-none">
                       <span className="font-medium">ManageMe</span>
                       <ChevronRight size={13} className="opacity-40" />
-                      <span className={`font-semibold ${view === 'projects' || view === 'notifications' ? 'text-text-main' : ''}`}>
+                      <span className={`font-semibold ${view === 'projects' || view === 'notifications' || view === 'users' ? 'text-text-main' : ''}`}>
                         {VIEW_LABELS[view]}
                       </span>
-                      {activeProject && view !== 'projects' && view !== 'notifications' && (
+                      {activeProject && view !== 'projects' && view !== 'notifications' && view !== 'users' && (
                         <>
                           <ChevronRight size={13} className="opacity-40" />
                           <button
@@ -255,6 +281,13 @@ const AppContent: React.FC = () => {
                     <div className="flex-1">
                       {view === 'projects' && <ProjectList />}
                       {view === 'notifications' && <NotificationList />}
+                      {view === 'users' && isAdmin && <UserList />}
+                      {view === 'users' && !isAdmin && (
+                        <div className="flex flex-col items-center justify-center py-28 gap-4">
+                          <Shield size={40} className="text-text-muted/30" />
+                          <p className="text-text-muted text-sm">Brak dostępu.</p>
+                        </div>
+                      )}
                       {view === 'stories' && (
                         activeProjectId
                           ? <StoryList onSelectStory={handleSelectStory} />
@@ -289,20 +322,63 @@ const AppContent: React.FC = () => {
           </main>
         </div>
 
-        {/* Notification toast dialog (outside main scroll area) */}
+        {/* Notification toast dialog */}
         <NotificationDialog />
       </div>
     </StoryProvider>
   )
 }
 
-function App() {
+const AuthGate: React.FC = () => {
+  const { currentUser, loading } = useAuth()
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-bg-dark flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-10 h-10 bg-gradient-to-br from-primary to-violet-600 rounded-xl flex items-center justify-center font-display font-black text-lg text-white animate-pulse">
+            M
+          </div>
+          <p className="text-sm text-text-muted">Ładowanie...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (!currentUser) return <LoginPage />
+  if (currentUser.blocked) {
+    return (
+      <div className="min-h-screen bg-bg-dark flex items-center justify-center dot-grid">
+        <div className="w-full max-w-sm mx-auto px-6">
+          <div className="bg-bg-sidebar border border-danger/30 rounded-2xl p-8 text-center flex flex-col items-center gap-4">
+            <div className="w-14 h-14 bg-danger/10 border border-danger/20 rounded-2xl flex items-center justify-center">
+              <span className="text-2xl">🚫</span>
+            </div>
+            <div>
+              <h2 className="font-display font-bold text-lg text-text-main">Konto zablokowane</h2>
+              <p className="text-sm text-text-muted mt-1">Twoje konto zostało zablokowane. Skontaktuj się z administratorem.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+  if (currentUser.role === 'guest') return <PendingApproval />
+
   return (
     <NotificationProvider>
       <ProjectProvider>
         <AppContent />
       </ProjectProvider>
     </NotificationProvider>
+  )
+}
+
+function App() {
+  return (
+    <AuthProvider>
+      <AuthGate />
+    </AuthProvider>
   )
 }
 
