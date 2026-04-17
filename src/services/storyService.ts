@@ -1,11 +1,12 @@
 import type { Story } from '../types';
 import { LocalStorageStrategy } from './storageStrategies';
 import type { StorageStrategy } from './storageStrategies';
+import { STORAGE_KEYS } from '../constants/storage';
 
 class StoryService {
   private storage: StorageStrategy<Story>;
 
-  constructor(storage: StorageStrategy<Story> = new LocalStorageStrategy<Story>('manageme_stories')) {
+  constructor(storage: StorageStrategy<Story> = new LocalStorageStrategy<Story>(STORAGE_KEYS.STORIES)) {
     this.storage = storage;
   }
 

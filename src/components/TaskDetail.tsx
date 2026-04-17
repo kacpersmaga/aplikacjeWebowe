@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import type { Task, Story } from '../types';
 import { useTasks } from '../context/TaskContext';
 import { userService } from '../services/userService';
+import { ROLE_LABELS } from '../constants/roles';
 import { X, User, Calendar, Clock, Flag, CheckCircle2, AlertCircle, UserCheck } from 'lucide-react';
 import { Modal } from './ui/Modal';
 import { PriorityBadge, StatusBadge } from './ui/Badge';
@@ -13,21 +14,26 @@ interface TaskDetailProps {
   onClose: () => void;
 }
 
-const ROLE_LABELS: Record<string, string> = {
-  admin: 'Administrator',
-  developer: 'Developer',
-  devops: 'DevOps',
-};
+const fmt = (iso?: string) =>
+  iso
+    ? new Date(iso).toLocaleDateString('pl-PL', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+      })
+    : '—';
 
 export const TaskDetail: React.FC<TaskDetailProps> = ({ task, story, onClose }) => {
   const { assignUser, completeTask } = useTasks();
   const assignableUsers = userService.getAssignableUsers();
   const assignedUser = task.assignedUserId ? userService.getUserById(task.assignedUserId) : undefined;
 
-  const handleComplete = () => { completeTask(task.id); onClose(); };
-
-  const fmt = (iso?: string) =>
-    iso ? new Date(iso).toLocaleDateString('pl-PL', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—';
+  const handleComplete = useCallback(() => {
+    completeTask(task.id);
+    onClose();
+  }, [completeTask, task.id, onClose]);
 
   return (
     <Modal onClose={onClose}>
@@ -93,11 +99,15 @@ export const TaskDetail: React.FC<TaskDetailProps> = ({ task, story, onClose }) 
           {assignedUser ? (
             <div className="flex items-center gap-3 bg-bg-dark border border-border rounded-lg px-4 py-3">
               <div className="w-9 h-9 bg-gradient-to-tr from-slate-100 to-slate-200 dark:from-slate-700 dark:to-slate-800 border border-border rounded-lg flex items-center justify-center font-bold text-sm text-text-main shrink-0">
-                {assignedUser.firstName[0]}{assignedUser.lastName[0]}
+                {assignedUser.firstName[0] ?? '?'}{assignedUser.lastName[0] ?? ''}
               </div>
               <div className="flex-1">
-                <p className="text-sm font-semibold text-text-main">{assignedUser.firstName} {assignedUser.lastName}</p>
-                <p className="text-[11px] text-text-muted">{ROLE_LABELS[assignedUser.role] ?? assignedUser.role}</p>
+                <p className="text-sm font-semibold text-text-main">
+                  {assignedUser.firstName} {assignedUser.lastName}
+                </p>
+                <p className="text-[11px] text-text-muted">
+                  {ROLE_LABELS[assignedUser.role] ?? assignedUser.role}
+                </p>
               </div>
               <UserCheck size={14} className="text-emerald-500 shrink-0" />
             </div>
@@ -109,14 +119,14 @@ export const TaskDetail: React.FC<TaskDetailProps> = ({ task, story, onClose }) 
           )}
         </div>
 
-        {/* Assign users - only when not done */}
+        {/* Assign users */}
         {task.status !== 'done' && (
           <div>
             <p className="text-xs font-semibold text-text-muted uppercase tracking-wider mb-2">
               {task.assignedUserId ? 'Zmień przypisanie' : 'Przypisz osobę'}
             </p>
             <div className="flex flex-col gap-1.5">
-              {assignableUsers.map((u) => (
+              {assignableUsers.map(u => (
                 <button
                   key={u.id}
                   onClick={() => assignUser(task.id, u.id)}
@@ -128,7 +138,7 @@ export const TaskDetail: React.FC<TaskDetailProps> = ({ task, story, onClose }) 
                     }`}
                 >
                   <div className="w-8 h-8 bg-gradient-to-tr from-slate-100 to-slate-200 dark:from-slate-700 dark:to-slate-800 border border-border rounded-md flex items-center justify-center font-bold text-xs text-text-main shrink-0">
-                    {u.firstName[0]}{u.lastName[0]}
+                    {u.firstName[0] ?? '?'}{u.lastName[0] ?? ''}
                   </div>
                   <div className="flex-1">
                     <p className="text-sm font-medium text-text-main">{u.firstName} {u.lastName}</p>
@@ -143,7 +153,7 @@ export const TaskDetail: React.FC<TaskDetailProps> = ({ task, story, onClose }) 
           </div>
         )}
 
-        {/* Action / status info */}
+        {/* Actions */}
         {task.status === 'doing' && (
           <Button
             variant="primary"

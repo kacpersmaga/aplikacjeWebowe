@@ -4,6 +4,7 @@ import type { Project } from '../types';
 import { projectService } from '../services/projectService';
 import { userService } from '../services/userService';
 import { useNotifications } from './NotificationContext';
+import { STORAGE_KEYS } from '../constants/storage';
 
 interface ProjectContextType {
   projects: Project[];
@@ -20,7 +21,7 @@ export const ProjectProvider = ({ children }: { children: ReactNode }) => {
   const { addNotification } = useNotifications();
   const [projects, setProjects] = useState<Project[]>([]);
   const [activeProjectId, setActiveProjectIdState] = useState<string | null>(
-    localStorage.getItem('manageme_active_project')
+    localStorage.getItem(STORAGE_KEYS.ACTIVE_PROJECT)
   );
 
   const loadProjects = useCallback(() => {
@@ -34,9 +35,9 @@ export const ProjectProvider = ({ children }: { children: ReactNode }) => {
   const setActiveProjectId = (id: string | null) => {
     setActiveProjectIdState(id);
     if (id) {
-      localStorage.setItem('manageme_active_project', id);
+      localStorage.setItem(STORAGE_KEYS.ACTIVE_PROJECT, id);
     } else {
-      localStorage.removeItem('manageme_active_project');
+      localStorage.removeItem(STORAGE_KEYS.ACTIVE_PROJECT);
     }
   };
 

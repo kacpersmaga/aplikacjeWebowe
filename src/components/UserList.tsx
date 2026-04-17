@@ -2,22 +2,9 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Shield, Ban, CheckCircle, ChevronDown } from 'lucide-react';
 import { userService } from '../services/userService';
 import { useAuth } from '../context/AuthContext';
+import { ROLE_LABELS, ROLE_BADGE_COLORS } from '../constants/roles';
 import type { User, Role } from '../types';
 import { SUPER_ADMIN_EMAIL } from '../config';
-
-const ROLE_LABELS: Record<Role, string> = {
-  admin: 'Admin',
-  developer: 'Developer',
-  devops: 'DevOps',
-  guest: 'Gość',
-};
-
-const ROLE_COLORS: Record<Role, string> = {
-  admin: 'text-violet-500 bg-violet-500/10 border-violet-500/20',
-  developer: 'text-sky-500 bg-sky-500/10 border-sky-500/20',
-  devops: 'text-emerald-500 bg-emerald-500/10 border-emerald-500/20',
-  guest: 'text-amber-500 bg-amber-500/10 border-amber-500/20',
-};
 
 const ALL_ROLES: Role[] = ['admin', 'developer', 'devops', 'guest'];
 
@@ -35,9 +22,7 @@ export const UserList: React.FC = () => {
 
   const handleRoleChange = (user: User, role: Role) => {
     userService.updateUserRole(user.id, role);
-    if (currentUser && user.id === currentUser.id) {
-      refreshCurrentUser();
-    }
+    if (currentUser?.id === user.id) refreshCurrentUser();
     reload();
   };
 
@@ -47,7 +32,7 @@ export const UserList: React.FC = () => {
   };
 
   const isSuperAdmin = (user: User) =>
-    SUPER_ADMIN_EMAIL !== '' && user.email === SUPER_ADMIN_EMAIL;
+    Boolean(SUPER_ADMIN_EMAIL) && user.email === SUPER_ADMIN_EMAIL;
 
   return (
     <div className="animate-fade-in space-y-6">
@@ -57,14 +42,14 @@ export const UserList: React.FC = () => {
         </div>
         <div>
           <h2 className="font-display font-bold text-xl text-text-main">Użytkownicy</h2>
-          <p className="text-sm text-text-muted">{users.length} {users.length === 1 ? 'użytkownik' : 'użytkowników'} w systemie</p>
+          <p className="text-sm text-text-muted">
+            {users.length} {users.length === 1 ? 'użytkownik' : 'użytkowników'} w systemie
+          </p>
         </div>
       </div>
 
       {users.length === 0 ? (
-        <div className="text-center py-16 text-text-muted text-sm">
-          Brak użytkowników w systemie.
-        </div>
+        <div className="text-center py-16 text-text-muted text-sm">Brak użytkowników w systemie.</div>
       ) : (
         <div className="bg-bg-sidebar border border-border rounded-2xl overflow-hidden">
           <table className="w-full text-sm">
@@ -84,7 +69,10 @@ export const UserList: React.FC = () => {
                 const canModify = !isCurrentUser && !superAdmin;
 
                 return (
-                  <tr key={user.id} className={`transition-colors ${user.blocked ? 'opacity-50' : 'hover:bg-black/5 dark:hover:bg-white/[0.02]'}`}>
+                  <tr
+                    key={user.id}
+                    className={`transition-colors ${user.blocked ? 'opacity-50' : 'hover:bg-black/5 dark:hover:bg-white/[0.02]'}`}
+                  >
                     {/* User */}
                     <td className="px-5 py-3.5">
                       <div className="flex items-center gap-3">
@@ -92,7 +80,7 @@ export const UserList: React.FC = () => {
                           <img src={user.photoURL} alt="avatar" className="w-8 h-8 rounded-lg object-cover shrink-0" />
                         ) : (
                           <div className="w-8 h-8 bg-gradient-to-tr from-slate-600 to-slate-700 rounded-lg flex items-center justify-center font-bold text-xs text-white shrink-0">
-                            {user.firstName[0]}{user.lastName[0]}
+                            {user.firstName[0] ?? '?'}{user.lastName[0] ?? ''}
                           </div>
                         )}
                         <div>
@@ -119,7 +107,7 @@ export const UserList: React.FC = () => {
                           <select
                             value={user.role}
                             onChange={e => handleRoleChange(user, e.target.value as Role)}
-                            className={`pl-2.5 pr-7 py-1 rounded-lg border text-xs font-semibold cursor-pointer focus:outline-none focus:ring-1 focus:ring-primary transition-colors ${ROLE_COLORS[user.role]} bg-transparent`}
+                            className={`pl-2.5 pr-7 py-1 rounded-lg border text-xs font-semibold cursor-pointer focus:outline-none focus:ring-1 focus:ring-primary transition-colors ${ROLE_BADGE_COLORS[user.role]} bg-transparent`}
                           >
                             {ALL_ROLES.map(r => (
                               <option key={r} value={r} className="bg-bg-sidebar text-text-main">
@@ -130,7 +118,7 @@ export const UserList: React.FC = () => {
                           <ChevronDown size={11} className="absolute right-2 pointer-events-none text-text-muted" />
                         </div>
                       ) : (
-                        <span className={`inline-flex px-2.5 py-1 rounded-lg border text-xs font-semibold ${ROLE_COLORS[user.role]}`}>
+                        <span className={`inline-flex px-2.5 py-1 rounded-lg border text-xs font-semibold ${ROLE_BADGE_COLORS[user.role]}`}>
                           {ROLE_LABELS[user.role]}
                         </span>
                       )}
@@ -156,11 +144,7 @@ export const UserList: React.FC = () => {
                               : 'text-danger border border-danger/30 hover:bg-danger/10'
                             }`}
                         >
-                          {user.blocked ? (
-                            <><CheckCircle size={13} /> Odblokuj</>
-                          ) : (
-                            <><Ban size={13} /> Zablokuj</>
-                          )}
+                          {user.blocked ? <><CheckCircle size={13} /> Odblokuj</> : <><Ban size={13} /> Zablokuj</>}
                         </button>
                       )}
                     </td>

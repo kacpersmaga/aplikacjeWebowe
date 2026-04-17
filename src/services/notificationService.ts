@@ -1,11 +1,15 @@
 import type { Notification } from '../types';
-
-const STORAGE_KEY = 'manageme_notifications';
+import { STORAGE_KEYS } from '../constants/storage';
 
 class NotificationService {
   getAll(): Notification[] {
-    const data = localStorage.getItem(STORAGE_KEY);
-    return data ? JSON.parse(data) : [];
+    try {
+      const data = localStorage.getItem(STORAGE_KEYS.NOTIFICATIONS);
+      return data ? JSON.parse(data) : [];
+    } catch {
+      console.error('[NotificationService] Failed to parse notifications. Resetting.');
+      return [];
+    }
   }
 
   getForUser(userId: string): Notification[] {
@@ -16,27 +20,37 @@ class NotificationService {
     const all = this.getAll();
     const notification: Notification = {
       ...data,
-      id: `notif-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+      id: crypto.randomUUID(),
       date: new Date().toISOString(),
       isRead: false,
     };
     all.unshift(notification);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(all));
+    try {
+      localStorage.setItem(STORAGE_KEYS.NOTIFICATIONS, JSON.stringify(all));
+    } catch (e) {
+      console.error('[NotificationService] Failed to save notifications.', e);
+    }
     return notification;
   }
 
   markAsRead(id: string): void {
-    const all = this.getAll().map(n =>
-      n.id === id ? { ...n, isRead: true } : n
-    );
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(all));
+    const all = this.getAll().map(n => (n.id === id ? { ...n, isRead: true } : n));
+    try {
+      localStorage.setItem(STORAGE_KEYS.NOTIFICATIONS, JSON.stringify(all));
+    } catch (e) {
+      console.error('[NotificationService] Failed to mark as read.', e);
+    }
   }
 
   markAllAsRead(userId: string): void {
     const all = this.getAll().map(n =>
       n.recipientId === userId ? { ...n, isRead: true } : n
     );
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(all));
+    try {
+      localStorage.setItem(STORAGE_KEYS.NOTIFICATIONS, JSON.stringify(all));
+    } catch (e) {
+      console.error('[NotificationService] Failed to mark all as read.', e);
+    }
   }
 }
 

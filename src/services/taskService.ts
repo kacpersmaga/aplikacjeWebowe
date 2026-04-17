@@ -1,11 +1,12 @@
 import type { Task } from '../types';
 import { LocalStorageStrategy } from './storageStrategies';
 import type { StorageStrategy } from './storageStrategies';
+import { STORAGE_KEYS } from '../constants/storage';
 
 class TaskService {
   private storage: StorageStrategy<Task>;
 
-  constructor(storage: StorageStrategy<Task> = new LocalStorageStrategy<Task>('manageme_tasks')) {
+  constructor(storage: StorageStrategy<Task> = new LocalStorageStrategy<Task>(STORAGE_KEYS.TASKS)) {
     this.storage = storage;
   }
 

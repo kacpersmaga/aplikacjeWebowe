@@ -1,11 +1,12 @@
 import type { Project } from '../types';
 import { LocalStorageStrategy } from './storageStrategies';
 import type { StorageStrategy } from './storageStrategies';
+import { STORAGE_KEYS } from '../constants/storage';
 
 class ProjectService {
   private storage: StorageStrategy<Project>;
 
-  constructor(storage: StorageStrategy<Project> = new LocalStorageStrategy<Project>('manageme_projects')) {
+  constructor(storage: StorageStrategy<Project> = new LocalStorageStrategy<Project>(STORAGE_KEYS.PROJECTS)) {
     this.storage = storage;
   }
 

@@ -1,15 +1,23 @@
 import type { User, Role } from '../types';
-
-const USERS_KEY = 'manageme_users';
+import { STORAGE_KEYS } from '../constants/storage';
 
 class UserService {
   getAllUsers(): User[] {
-    const data = localStorage.getItem(USERS_KEY);
-    return data ? JSON.parse(data) : [];
+    try {
+      const data = localStorage.getItem(STORAGE_KEYS.USERS);
+      return data ? JSON.parse(data) : [];
+    } catch {
+      console.error('[UserService] Failed to parse users. Resetting.');
+      return [];
+    }
   }
 
   private saveAll(users: User[]): void {
-    localStorage.setItem(USERS_KEY, JSON.stringify(users));
+    try {
+      localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(users));
+    } catch (e) {
+      console.error('[UserService] Failed to save users.', e);
+    }
   }
 
   saveUser(user: User): User {

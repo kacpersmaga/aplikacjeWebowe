@@ -6,16 +6,31 @@ interface ModalProps {
   maxWidth?: string;
 }
 
+// Track how many modals are open to correctly manage body scroll
+let openModalCount = 0;
+
 export const Modal: React.FC<ModalProps> = ({ onClose, children, maxWidth = 'max-w-2xl' }) => {
   useEffect(() => {
-    const handleKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    openModalCount++;
+    if (openModalCount === 1) {
+      document.body.style.overflow = 'hidden';
+    }
+
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
     document.addEventListener('keydown', handleKey);
-    document.body.style.overflow = 'hidden';
+
     return () => {
       document.removeEventListener('keydown', handleKey);
-      document.body.style.overflow = '';
+      openModalCount--;
+      if (openModalCount === 0) {
+        document.body.style.overflow = '';
+      }
     };
-  }, [onClose]);
+    // onClose intentionally omitted — we only want to register/unregister on mount/unmount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <div

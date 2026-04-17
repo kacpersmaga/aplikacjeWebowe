@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { ProjectItem } from './ProjectItem';
 import { ProjectForm } from './ProjectForm';
 import { useProjects } from '../hooks/useProjects';
@@ -9,23 +9,20 @@ import { Button } from './ui/Button';
 export const ProjectList: React.FC = () => {
   const { projects } = useProjects();
   const [editingProject, setEditingProject] = useState<Project | null>(null);
-  const [isFormOpen, setIsFormOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
-  const filteredProjects = projects.filter(p =>
-    p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    p.description.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredProjects = useMemo(
+    () =>
+      projects.filter(
+        p =>
+          p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          p.description.toLowerCase().includes(searchQuery.toLowerCase())
+      ),
+    [projects, searchQuery]
   );
 
-  const handleEdit = (project: Project) => {
-    setEditingProject(project);
-    setIsFormOpen(true);
-  };
-
-  const handleCloseForm = () => {
-    setIsFormOpen(false);
-    setEditingProject(null);
-  };
+  const handleEdit = (project: Project) => setEditingProject(project);
+  const handleCloseForm = () => setEditingProject(null);
 
   return (
     <div className="flex flex-col gap-8 animate-fade-in">
@@ -53,17 +50,13 @@ export const ProjectList: React.FC = () => {
               type="text"
               placeholder="Szukaj projektów..."
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={e => setSearchQuery(e.target.value)}
               className="w-full pl-9 pr-4 py-2 bg-bg-sidebar border border-border rounded-xl text-sm text-text-main
                 placeholder:text-text-muted/60 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/60
                 transition-all"
             />
           </div>
-          <Button
-            variant="primary"
-            icon={<Plus size={15} />}
-            onClick={() => setIsFormOpen(true)}
-          >
+          <Button variant="primary" icon={<Plus size={15} />} onClick={() => setEditingProject({} as Project)}>
             Nowy projekt
           </Button>
         </div>
@@ -86,21 +79,28 @@ export const ProjectList: React.FC = () => {
             </p>
           </div>
           {!searchQuery && (
-            <Button variant="primary" icon={<Plus size={14} />} onClick={() => setIsFormOpen(true)}>
+            <Button
+              variant="primary"
+              icon={<Plus size={14} />}
+              onClick={() => setEditingProject({} as Project)}
+            >
               Utwórz projekt
             </Button>
           )}
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 pb-8">
-          {filteredProjects.map((project) => (
+          {filteredProjects.map(project => (
             <ProjectItem key={project.id} project={project} onEdit={handleEdit} />
           ))}
         </div>
       )}
 
-      {isFormOpen && (
-        <ProjectForm editProject={editingProject || undefined} onCancel={handleCloseForm} />
+      {editingProject !== null && (
+        <ProjectForm
+          editProject={editingProject.id ? editingProject : undefined}
+          onCancel={handleCloseForm}
+        />
       )}
     </div>
   );

@@ -11,12 +11,21 @@ export class LocalStorageStrategy<T> implements StorageStrategy<T> {
   }
 
   getAll(): T[] {
-    const data = localStorage.getItem(this.key);
-    return data ? JSON.parse(data) : [];
+    try {
+      const data = localStorage.getItem(this.key);
+      return data ? JSON.parse(data) : [];
+    } catch {
+      console.error(`[Storage] Failed to parse data for key: "${this.key}". Resetting to empty.`);
+      return [];
+    }
   }
 
   save(items: T[]): void {
-    localStorage.setItem(this.key, JSON.stringify(items));
+    try {
+      localStorage.setItem(this.key, JSON.stringify(items));
+    } catch (e) {
+      console.error(`[Storage] Failed to save data for key: "${this.key}".`, e);
+    }
   }
 }
 

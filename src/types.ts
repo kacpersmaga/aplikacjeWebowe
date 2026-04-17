@@ -44,15 +44,15 @@ export interface Task {
   assignedUserId?: string;
 }
 
-type ISOString = string;
-type UserID = string;
+export type ISOString = string;
+export type UserID = string;
 
 export interface Notification {
   id: string;
   title: string;
   message: string;
   date: ISOString;
-  priority: 'low' | 'medium' | 'high';
+  priority: Priority;
   isRead: boolean;
   recipientId: UserID;
 }
