@@ -1,56 +1,50 @@
 import type { Notification } from '../types';
+import { createStrategy } from './storageStrategies';
+import type { StorageStrategy } from './storageStrategies';
 import { STORAGE_KEYS } from '../constants/storage';
 
 class NotificationService {
-  getAll(): Notification[] {
-    try {
-      const data = localStorage.getItem(STORAGE_KEYS.NOTIFICATIONS);
-      return data ? JSON.parse(data) : [];
-    } catch {
-      console.error('[NotificationService] Failed to parse notifications. Resetting.');
-      return [];
-    }
+  private storage: StorageStrategy<Notification>;
+
+  constructor() {
+    this.storage = createStrategy<Notification>('notifications', STORAGE_KEYS.NOTIFICATIONS);
   }
 
-  getForUser(userId: string): Notification[] {
-    return this.getAll().filter(n => n.recipientId === userId);
+  async getAll(): Promise<Notification[]> {
+    const all = await this.storage.getAll();
+    return all.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   }
 
-  create(data: Omit<Notification, 'id' | 'date' | 'isRead'>): Notification {
-    const all = this.getAll();
+  async getForUser(userId: string): Promise<Notification[]> {
+    const all = await this.getAll();
+    return all.filter(n => n.recipientId === userId);
+  }
+
+  async create(data: Omit<Notification, 'id' | 'date' | 'isRead'>): Promise<Notification> {
     const notification: Notification = {
       ...data,
       id: crypto.randomUUID(),
       date: new Date().toISOString(),
       isRead: false,
     };
-    all.unshift(notification);
-    try {
-      localStorage.setItem(STORAGE_KEYS.NOTIFICATIONS, JSON.stringify(all));
-    } catch (e) {
-      console.error('[NotificationService] Failed to save notifications.', e);
-    }
+    await this.storage.upsert(notification);
     return notification;
   }
 
-  markAsRead(id: string): void {
-    const all = this.getAll().map(n => (n.id === id ? { ...n, isRead: true } : n));
-    try {
-      localStorage.setItem(STORAGE_KEYS.NOTIFICATIONS, JSON.stringify(all));
-    } catch (e) {
-      console.error('[NotificationService] Failed to mark as read.', e);
+  async markAsRead(id: string): Promise<void> {
+    const all = await this.storage.getAll();
+    const notification = all.find(n => n.id === id);
+    if (notification) {
+      await this.storage.upsert({ ...notification, isRead: true });
     }
   }
 
-  markAllAsRead(userId: string): void {
-    const all = this.getAll().map(n =>
-      n.recipientId === userId ? { ...n, isRead: true } : n
+  async markAllAsRead(userId: string): Promise<void> {
+    const all = await this.storage.getAll();
+    const userNotifications = all.filter(n => n.recipientId === userId && !n.isRead);
+    await Promise.all(
+      userNotifications.map(n => this.storage.upsert({ ...n, isRead: true }))
     );
-    try {
-      localStorage.setItem(STORAGE_KEYS.NOTIFICATIONS, JSON.stringify(all));
-    } catch (e) {
-      console.error('[NotificationService] Failed to mark all as read.', e);
-    }
   }
 }
 

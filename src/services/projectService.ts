@@ -1,51 +1,41 @@
 import type { Project } from '../types';
-import { LocalStorageStrategy } from './storageStrategies';
+import { createStrategy } from './storageStrategies';
 import type { StorageStrategy } from './storageStrategies';
 import { STORAGE_KEYS } from '../constants/storage';
 
 class ProjectService {
   private storage: StorageStrategy<Project>;
 
-  constructor(storage: StorageStrategy<Project> = new LocalStorageStrategy<Project>(STORAGE_KEYS.PROJECTS)) {
-    this.storage = storage;
+  constructor() {
+    this.storage = createStrategy<Project>('projects', STORAGE_KEYS.PROJECTS);
   }
 
-  setStrategy(storage: StorageStrategy<Project>) {
-    this.storage = storage;
-  }
-
-  getAll(): Project[] {
+  async getAll(): Promise<Project[]> {
     return this.storage.getAll();
   }
 
-  getById(id: string): Project | undefined {
-    return this.getAll().find((p) => p.id === id);
+  async getById(id: string): Promise<Project | undefined> {
+    const all = await this.getAll();
+    return all.find(p => p.id === id);
   }
 
-  create(project: Omit<Project, 'id'>): Project {
-    const projects = this.getAll();
-    const newProject = {
-      ...project,
-      id: crypto.randomUUID(),
-    };
-    projects.push(newProject);
-    this.storage.save(projects);
+  async create(project: Omit<Project, 'id'>): Promise<Project> {
+    const newProject: Project = { ...project, id: crypto.randomUUID() };
+    await this.storage.upsert(newProject);
     return newProject;
   }
 
-  update(id: string, updatedProject: Partial<Project>): Project | null {
-    const projects = this.getAll();
-    const index = projects.findIndex((p) => p.id === id);
-    if (index === -1) return null;
-
-    projects[index] = { ...projects[index], ...updatedProject };
-    this.storage.save(projects);
-    return projects[index];
+  async update(id: string, updates: Partial<Project>): Promise<Project | null> {
+    const all = await this.getAll();
+    const existing = all.find(p => p.id === id);
+    if (!existing) return null;
+    const updated = { ...existing, ...updates };
+    await this.storage.upsert(updated);
+    return updated;
   }
 
-  delete(id: string): void {
-    const projects = this.getAll().filter((p) => p.id !== id);
-    this.storage.save(projects);
+  async delete(id: string): Promise<void> {
+    await this.storage.remove(id);
   }
 }
 

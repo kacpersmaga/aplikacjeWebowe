@@ -1,59 +1,54 @@
 import type { Task } from '../types';
-import { LocalStorageStrategy } from './storageStrategies';
+import { createStrategy } from './storageStrategies';
 import type { StorageStrategy } from './storageStrategies';
 import { STORAGE_KEYS } from '../constants/storage';
 
 class TaskService {
   private storage: StorageStrategy<Task>;
 
-  constructor(storage: StorageStrategy<Task> = new LocalStorageStrategy<Task>(STORAGE_KEYS.TASKS)) {
-    this.storage = storage;
+  constructor() {
+    this.storage = createStrategy<Task>('tasks', STORAGE_KEYS.TASKS);
   }
 
-  setStrategy(storage: StorageStrategy<Task>) {
-    this.storage = storage;
-  }
-
-  getAll(): Task[] {
+  async getAll(): Promise<Task[]> {
     return this.storage.getAll();
   }
 
-  getByStory(storyId: string): Task[] {
-    return this.getAll().filter(t => t.storyId === storyId);
+  async getByStory(storyId: string): Promise<Task[]> {
+    const all = await this.getAll();
+    return all.filter(t => t.storyId === storyId);
   }
 
-  getById(id: string): Task | undefined {
-    return this.getAll().find(t => t.id === id);
+  async getById(id: string): Promise<Task | undefined> {
+    const all = await this.getAll();
+    return all.find(t => t.id === id);
   }
 
-  create(task: Omit<Task, 'id' | 'createdAt'>): Task {
-    const tasks = this.getAll();
+  async create(task: Omit<Task, 'id' | 'createdAt'>): Promise<Task> {
     const newTask: Task = {
       ...task,
       id: crypto.randomUUID(),
       createdAt: new Date().toISOString(),
     };
-    tasks.push(newTask);
-    this.storage.save(tasks);
+    await this.storage.upsert(newTask);
     return newTask;
   }
 
-  update(id: string, updates: Partial<Task>): Task | null {
-    const tasks = this.getAll();
-    const index = tasks.findIndex(t => t.id === id);
-    if (index === -1) return null;
-    tasks[index] = { ...tasks[index], ...updates };
-    this.storage.save(tasks);
-    return tasks[index];
+  async update(id: string, updates: Partial<Task>): Promise<Task | null> {
+    const all = await this.getAll();
+    const existing = all.find(t => t.id === id);
+    if (!existing) return null;
+    const updated = { ...existing, ...updates };
+    await this.storage.upsert(updated);
+    return updated;
   }
 
-  delete(id: string): void {
-    const tasks = this.getAll().filter(t => t.id !== id);
-    this.storage.save(tasks);
+  async delete(id: string): Promise<void> {
+    await this.storage.remove(id);
   }
 
-  areAllDone(storyId: string): boolean {
-    const tasks = this.getByStory(storyId);
+  async areAllDone(storyId: string): Promise<boolean> {
+    const tasks = await this.getByStory(storyId);
     return tasks.length > 0 && tasks.every(t => t.status === 'done');
   }
 }

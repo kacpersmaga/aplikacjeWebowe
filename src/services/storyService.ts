@@ -1,52 +1,50 @@
 import type { Story } from '../types';
-import { LocalStorageStrategy } from './storageStrategies';
+import { createStrategy } from './storageStrategies';
 import type { StorageStrategy } from './storageStrategies';
 import { STORAGE_KEYS } from '../constants/storage';
 
 class StoryService {
   private storage: StorageStrategy<Story>;
 
-  constructor(storage: StorageStrategy<Story> = new LocalStorageStrategy<Story>(STORAGE_KEYS.STORIES)) {
-    this.storage = storage;
+  constructor() {
+    this.storage = createStrategy<Story>('stories', STORAGE_KEYS.STORIES);
   }
 
-  setStrategy(storage: StorageStrategy<Story>) {
-    this.storage = storage;
-  }
-
-  getAll(): Story[] {
+  async getAll(): Promise<Story[]> {
     return this.storage.getAll();
   }
 
-  getByProject(projectId: string): Story[] {
-    return this.getAll().filter((s) => s.projectId === projectId);
+  async getByProject(projectId: string): Promise<Story[]> {
+    const all = await this.getAll();
+    return all.filter(s => s.projectId === projectId);
   }
 
-  create(story: Omit<Story, 'id' | 'createdAt'>): Story {
-    const stories = this.getAll();
+  async getById(id: string): Promise<Story | undefined> {
+    const all = await this.getAll();
+    return all.find(s => s.id === id);
+  }
+
+  async create(story: Omit<Story, 'id' | 'createdAt'>): Promise<Story> {
     const newStory: Story = {
       ...story,
       id: crypto.randomUUID(),
       createdAt: new Date().toISOString(),
     };
-    stories.push(newStory);
-    this.storage.save(stories);
+    await this.storage.upsert(newStory);
     return newStory;
   }
 
-  update(id: string, updatedStory: Partial<Story>): Story | null {
-    const stories = this.getAll();
-    const index = stories.findIndex((s) => s.id === id);
-    if (index === -1) return null;
-
-    stories[index] = { ...stories[index], ...updatedStory };
-    this.storage.save(stories);
-    return stories[index];
+  async update(id: string, updates: Partial<Story>): Promise<Story | null> {
+    const all = await this.getAll();
+    const existing = all.find(s => s.id === id);
+    if (!existing) return null;
+    const updated = { ...existing, ...updates };
+    await this.storage.upsert(updated);
+    return updated;
   }
 
-  delete(id: string): void {
-    const stories = this.getAll().filter((s) => s.id !== id);
-    this.storage.save(stories);
+  async delete(id: string): Promise<void> {
+    await this.storage.remove(id);
   }
 }
 

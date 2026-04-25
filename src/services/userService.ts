@@ -1,67 +1,51 @@
 import type { User, Role } from '../types';
+import { createStrategy } from './storageStrategies';
+import type { StorageStrategy } from './storageStrategies';
 import { STORAGE_KEYS } from '../constants/storage';
 
 class UserService {
-  getAllUsers(): User[] {
-    try {
-      const data = localStorage.getItem(STORAGE_KEYS.USERS);
-      return data ? JSON.parse(data) : [];
-    } catch {
-      console.error('[UserService] Failed to parse users. Resetting.');
-      return [];
-    }
+  private storage: StorageStrategy<User>;
+
+  constructor() {
+    this.storage = createStrategy<User>('users', STORAGE_KEYS.USERS);
   }
 
-  private saveAll(users: User[]): void {
-    try {
-      localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(users));
-    } catch (e) {
-      console.error('[UserService] Failed to save users.', e);
-    }
+  async getAllUsers(): Promise<User[]> {
+    return this.storage.getAll();
   }
 
-  saveUser(user: User): User {
-    const users = this.getAllUsers();
-    const idx = users.findIndex(u => u.id === user.id);
-    if (idx >= 0) {
-      users[idx] = user;
-    } else {
-      users.push(user);
-    }
-    this.saveAll(users);
+  async saveUser(user: User): Promise<User> {
+    await this.storage.upsert(user);
     return user;
   }
 
-  getUserById(id: string): User | undefined {
-    return this.getAllUsers().find(u => u.id === id);
+  async getUserById(id: string): Promise<User | undefined> {
+    const all = await this.getAllUsers();
+    return all.find(u => u.id === id);
   }
 
-  getUserByEmail(email: string): User | undefined {
-    return this.getAllUsers().find(u => u.email === email);
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    const all = await this.getAllUsers();
+    return all.find(u => u.email === email);
   }
 
-  updateUserRole(id: string, role: Role): void {
-    const users = this.getAllUsers();
-    const user = users.find(u => u.id === id);
+  async updateUserRole(id: string, role: Role): Promise<void> {
+    const user = await this.getUserById(id);
     if (user) {
-      user.role = role;
-      this.saveAll(users);
+      await this.storage.upsert({ ...user, role });
     }
   }
 
-  setBlocked(id: string, blocked: boolean): void {
-    const users = this.getAllUsers();
-    const user = users.find(u => u.id === id);
+  async setBlocked(id: string, blocked: boolean): Promise<void> {
+    const user = await this.getUserById(id);
     if (user) {
-      user.blocked = blocked;
-      this.saveAll(users);
+      await this.storage.upsert({ ...user, blocked });
     }
   }
 
-  getAssignableUsers(): User[] {
-    return this.getAllUsers().filter(
-      u => (u.role === 'developer' || u.role === 'devops') && !u.blocked
-    );
+  async getAssignableUsers(): Promise<User[]> {
+    const all = await this.getAllUsers();
+    return all.filter(u => (u.role === 'developer' || u.role === 'devops') && !u.blocked);
   }
 }
 
