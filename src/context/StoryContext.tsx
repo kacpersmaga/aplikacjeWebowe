@@ -20,7 +20,7 @@ export const StoryProvider = ({ children }: { children: ReactNode }) => {
 
   const loadStories = useCallback(() => {
     if (activeProjectId) {
-      setStories(storyService.getByProject(activeProjectId));
+      storyService.getByProject(activeProjectId).then(setStories);
     } else {
       setStories([]);
     }
@@ -31,18 +31,15 @@ export const StoryProvider = ({ children }: { children: ReactNode }) => {
   }, [loadStories]);
 
   const addStory = (story: Omit<Story, 'id' | 'createdAt'>) => {
-    storyService.create(story);
-    loadStories();
+    storyService.create(story).then(loadStories);
   };
 
   const updateStory = (id: string, story: Partial<Story>) => {
-    storyService.update(id, story);
-    loadStories();
+    storyService.update(id, story).then(loadStories);
   };
 
   const deleteStory = (id: string) => {
-    storyService.delete(id);
-    loadStories();
+    storyService.delete(id).then(loadStories);
   };
 
   return (

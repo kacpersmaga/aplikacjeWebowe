@@ -25,7 +25,7 @@ export const ProjectProvider = ({ children }: { children: ReactNode }) => {
   );
 
   const loadProjects = useCallback(() => {
-    setProjects(projectService.getAll());
+    projectService.getAll().then(setProjects);
   }, []);
 
   useEffect(() => {
@@ -42,11 +42,9 @@ export const ProjectProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const addProject = (project: Omit<Project, 'id'>) => {
-    const created = projectService.create(project);
-    // Notify all admins about the new project
-    userService.getAllUsers()
-      .filter(u => u.role === 'admin')
-      .forEach(admin => {
+    projectService.create(project).then(async created => {
+      const admins = (await userService.getAllUsers()).filter(u => u.role === 'admin');
+      admins.forEach(admin => {
         addNotification({
           title: 'Nowy projekt',
           message: `Utworzono nowy projekt: „${created.name}".`,
@@ -54,20 +52,21 @@ export const ProjectProvider = ({ children }: { children: ReactNode }) => {
           recipientId: admin.id,
         });
       });
-    loadProjects();
+      loadProjects();
+    });
   };
 
   const updateProject = (id: string, project: Partial<Project>) => {
-    projectService.update(id, project);
-    loadProjects();
+    projectService.update(id, project).then(loadProjects);
   };
 
   const deleteProject = (id: string) => {
-    projectService.delete(id);
-    if (activeProjectId === id) {
-      setActiveProjectId(null);
-    }
-    loadProjects();
+    projectService.delete(id).then(() => {
+      if (activeProjectId === id) {
+        setActiveProjectId(null);
+      }
+      loadProjects();
+    });
   };
 
   return (
