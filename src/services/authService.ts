@@ -27,12 +27,13 @@ export function onAuthChanged(
   return onAuthStateChanged(auth, callback);
 }
 
-export function isNewUser(uid: string): boolean {
-  return !userService.getUserById(uid);
+export async function isNewUser(uid: string): Promise<boolean> {
+  const existing = await userService.getUserById(uid);
+  return !existing;
 }
 
-export function getOrCreateUserProfile(firebaseUser: FirebaseUser): User {
-  const existing = userService.getUserById(firebaseUser.uid);
+export async function getOrCreateUserProfile(firebaseUser: FirebaseUser): Promise<User> {
+  const existing = await userService.getUserById(firebaseUser.uid);
   if (existing) return existing;
 
   const displayName = firebaseUser.displayName || '';
@@ -52,18 +53,21 @@ export function getOrCreateUserProfile(firebaseUser: FirebaseUser): User {
     photoURL: firebaseUser.photoURL ?? undefined,
   };
 
-  userService.saveUser(newUser);
+  await userService.saveUser(newUser);
 
-  // Notify all admins about the new account
-  const admins = userService.getAllUsers().filter(u => u.role === 'admin' && u.id !== newUser.id);
-  admins.forEach(admin => {
-    notificationService.create({
-      title: 'Nowe konto w systemie',
-      message: `${firstName} ${lastName} (${firebaseUser.email ?? ''}) zarejestrował/a się w systemie i oczekuje na zatwierdzenie.`,
-      priority: 'high',
-      recipientId: admin.id,
-    });
-  });
+  const admins = (await userService.getAllUsers()).filter(
+    u => u.role === 'admin' && u.id !== newUser.id
+  );
+  await Promise.all(
+    admins.map(admin =>
+      notificationService.create({
+        title: 'Nowe konto w systemie',
+        message: `${firstName} ${lastName} (${firebaseUser.email ?? ''}) zarejestrował/a się w systemie i oczekuje na zatwierdzenie.`,
+        priority: 'high',
+        recipientId: admin.id,
+      })
+    )
+  );
 
   return newUser;
 }

@@ -32,23 +32,27 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const unsubscribe = onAuthChanged(fbUser => {
       setFirebaseUser(fbUser);
       if (fbUser) {
-        const firstLogin = isNewUser(fbUser.uid);
-        const profile = getOrCreateUserProfile(fbUser);
-        setCurrentUser(profile);
-        setIsFirstLogin(firstLogin);
+        (async () => {
+          const firstLogin = await isNewUser(fbUser.uid);
+          const profile = await getOrCreateUserProfile(fbUser);
+          setCurrentUser(profile);
+          setIsFirstLogin(firstLogin);
+          setLoading(false);
+        })();
       } else {
         setCurrentUser(null);
         setIsFirstLogin(false);
+        setLoading(false);
       }
-      setLoading(false);
     });
     return unsubscribe;
   }, []);
 
   const refreshCurrentUser = useCallback(() => {
     if (firebaseUser) {
-      const profile = userService.getUserById(firebaseUser.uid);
-      if (profile) setCurrentUser(profile);
+      userService.getUserById(firebaseUser.uid).then(profile => {
+        if (profile) setCurrentUser(profile);
+      });
     }
   }, [firebaseUser]);
 
