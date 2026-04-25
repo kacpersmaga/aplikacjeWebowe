@@ -1,5 +1,5 @@
-import React, { useCallback } from 'react';
-import type { Task, Story } from '../types';
+import React, { useCallback, useState, useEffect } from 'react';
+import type { Task, Story, User } from '../types';
 import { useTasks } from '../context/TaskContext';
 import { userService } from '../services/userService';
 import { ROLE_LABELS } from '../constants/roles';
@@ -27,8 +27,20 @@ const fmt = (iso?: string) =>
 
 export const TaskDetail: React.FC<TaskDetailProps> = ({ task, story, onClose }) => {
   const { assignUser, completeTask } = useTasks();
-  const assignableUsers = userService.getAssignableUsers();
-  const assignedUser = task.assignedUserId ? userService.getUserById(task.assignedUserId) : undefined;
+  const [assignableUsers, setAssignableUsers] = useState<User[]>([]);
+  const [assignedUser, setAssignedUser] = useState<User | undefined>(undefined);
+
+  useEffect(() => {
+    userService.getAssignableUsers().then(setAssignableUsers);
+  }, []);
+
+  useEffect(() => {
+    if (task.assignedUserId) {
+      userService.getUserById(task.assignedUserId).then(setAssignedUser);
+    } else {
+      setAssignedUser(undefined);
+    }
+  }, [task.assignedUserId]);
 
   const handleComplete = useCallback(() => {
     completeTask(task.id);

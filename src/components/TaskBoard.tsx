@@ -1,5 +1,5 @@
-import React, { useState, useMemo, useCallback } from 'react';
-import type { Task, Story, Status } from '../types';
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
+import type { Task, Story, Status, User } from '../types';
 import { useTasks } from '../context/TaskContext';
 import { userService } from '../services/userService';
 import { PRIORITY_ACCENT } from '../constants/colors';
@@ -111,7 +111,15 @@ interface TaskCardProps {
 }
 
 const TaskCard: React.FC<TaskCardProps> = ({ task, onEdit, onDelete, onSelect }) => {
-  const assignedUser = task.assignedUserId ? userService.getUserById(task.assignedUserId) : undefined;
+  const [assignedUser, setAssignedUser] = useState<User | undefined>(undefined);
+
+  useEffect(() => {
+    if (task.assignedUserId) {
+      userService.getUserById(task.assignedUserId).then(setAssignedUser);
+    } else {
+      setAssignedUser(undefined);
+    }
+  }, [task.assignedUserId]);
 
   return (
     <div

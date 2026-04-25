@@ -13,7 +13,7 @@ export const UserList: React.FC = () => {
   const [users, setUsers] = useState<User[]>([]);
 
   const reload = useCallback(() => {
-    setUsers(userService.getAllUsers());
+    userService.getAllUsers().then(setUsers);
   }, []);
 
   useEffect(() => {
@@ -21,14 +21,14 @@ export const UserList: React.FC = () => {
   }, [reload]);
 
   const handleRoleChange = (user: User, role: Role) => {
-    userService.updateUserRole(user.id, role);
-    if (currentUser?.id === user.id) refreshCurrentUser();
-    reload();
+    userService.updateUserRole(user.id, role).then(() => {
+      if (currentUser?.id === user.id) refreshCurrentUser();
+      reload();
+    });
   };
 
   const handleToggleBlock = (user: User) => {
-    userService.setBlocked(user.id, !user.blocked);
-    reload();
+    userService.setBlocked(user.id, !user.blocked).then(reload);
   };
 
   const isSuperAdmin = (user: User) =>
