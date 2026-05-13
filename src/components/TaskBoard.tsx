@@ -8,7 +8,7 @@ import { TaskDetail } from './TaskDetail';
 import { KanbanColumn } from './KanbanColumn';
 import { PriorityBadge } from './ui/Badge';
 import { Button } from './ui/Button';
-import { Edit2, Trash2, Clock, User, CheckCircle2, ListTodo, Plus, Calendar } from 'lucide-react';
+import { Edit2, Trash2, Clock, User as UserIcon, CheckCircle2, ListTodo, Plus, Calendar } from 'lucide-react';
 
 interface TaskBoardProps {
   story: Story;
@@ -190,7 +190,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, onEdit, onDelete, onSelect })
             </div>
           ) : (
             <span className="flex items-center gap-1 text-[11px] text-text-muted/40">
-              <User size={10} />
+              <UserIcon size={10} />
               Brak
             </span>
           )}

@@ -128,8 +128,9 @@ test.describe('ManageMe – testy E2E', () => {
     // Klikamy edytuj na pierwszej karcie
     await page.getByTestId('btn-edit-project').first().click();
 
-    // Zmieniamy nazwę
+    // Zmieniamy nazwę i opis (opis musi być wypełniony bo jest required)
     await page.locator('#name').fill('Nowa Nazwa Projektu');
+    await page.locator('#description').fill('Nowy opis projektu');
     await page.getByTestId('btn-submit-project').click();
 
     // Karta powinna pokazywać zaktualizowaną nazwę

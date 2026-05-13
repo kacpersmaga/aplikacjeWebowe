@@ -3,7 +3,7 @@ import type { Task, Story, User } from '../types';
 import { useTasks } from '../context/TaskContext';
 import { userService } from '../services/userService';
 import { ROLE_LABELS } from '../constants/roles';
-import { X, User, Calendar, Clock, Flag, CheckCircle2, AlertCircle, UserCheck } from 'lucide-react';
+import { X, User as UserIcon, Calendar, Clock, Flag, CheckCircle2, AlertCircle, UserCheck } from 'lucide-react';
 import { Modal } from './ui/Modal';
 import { PriorityBadge, StatusBadge } from './ui/Badge';
 import { Button } from './ui/Button';
@@ -125,7 +125,7 @@ export const TaskDetail: React.FC<TaskDetailProps> = ({ task, story, onClose }) 
             </div>
           ) : (
             <div className="flex items-center gap-2 text-text-muted bg-bg-dark border border-dashed border-border rounded-lg px-4 py-3">
-              <User size={14} />
+              <UserIcon size={14} />
               <span className="text-sm">Brak przypisanej osoby</span>
             </div>
           )}
