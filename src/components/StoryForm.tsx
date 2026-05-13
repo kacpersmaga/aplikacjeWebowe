@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import type { Story, Priority, Status } from '../types';
 import { useStories } from '../context/StoryContext';
 import { useProjects } from '../hooks/useProjects';
-import { userService } from '../services/userService';
+import { useAuth } from '../context/AuthContext';
 import { LayoutList, X } from 'lucide-react';
 import { Modal } from './ui/Modal';
 import { Button } from './ui/Button';
@@ -16,7 +16,7 @@ interface StoryFormProps {
 export const StoryForm: React.FC<StoryFormProps> = ({ onClose, storyToEdit }) => {
   const { activeProjectId } = useProjects();
   const { addStory, updateStory } = useStories();
-  const user = userService.getCurrentUser();
+  const { currentUser } = useAuth();
 
   const [formData, setFormData] = useState({
     name: storyToEdit?.name || '',
@@ -31,7 +31,7 @@ export const StoryForm: React.FC<StoryFormProps> = ({ onClose, storyToEdit }) =>
     if (storyToEdit) {
       updateStory(storyToEdit.id, formData);
     } else {
-      addStory({ ...formData, projectId: activeProjectId, ownerId: user.id });
+      addStory({ ...formData, projectId: activeProjectId, ownerId: currentUser?.id ?? '' });
     }
     onClose();
   };

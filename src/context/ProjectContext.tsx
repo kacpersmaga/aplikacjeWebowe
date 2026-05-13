@@ -2,6 +2,9 @@ import { createContext, useState, useEffect, useCallback } from 'react';
 import type { ReactNode } from 'react';
 import type { Project } from '../types';
 import { projectService } from '../services/projectService';
+import { userService } from '../services/userService';
+import { useNotifications } from './NotificationContext';
+import { STORAGE_KEYS } from '../constants/storage';
 
 interface ProjectContextType {
   projects: Project[];
@@ -15,13 +18,14 @@ interface ProjectContextType {
 export const ProjectContext = createContext<ProjectContextType | undefined>(undefined);
 
 export const ProjectProvider = ({ children }: { children: ReactNode }) => {
+  const { addNotification } = useNotifications();
   const [projects, setProjects] = useState<Project[]>([]);
   const [activeProjectId, setActiveProjectIdState] = useState<string | null>(
-    localStorage.getItem('manageme_active_project')
+    localStorage.getItem(STORAGE_KEYS.ACTIVE_PROJECT)
   );
 
   const loadProjects = useCallback(() => {
-    setProjects(projectService.getAll());
+    projectService.getAll().then(setProjects);
   }, []);
 
   useEffect(() => {
@@ -31,38 +35,48 @@ export const ProjectProvider = ({ children }: { children: ReactNode }) => {
   const setActiveProjectId = (id: string | null) => {
     setActiveProjectIdState(id);
     if (id) {
-      localStorage.setItem('manageme_active_project', id);
+      localStorage.setItem(STORAGE_KEYS.ACTIVE_PROJECT, id);
     } else {
-      localStorage.removeItem('manageme_active_project');
+      localStorage.removeItem(STORAGE_KEYS.ACTIVE_PROJECT);
     }
   };
 
   const addProject = (project: Omit<Project, 'id'>) => {
-    projectService.create(project);
-    loadProjects();
+    projectService.create(project).then(async created => {
+      const admins = (await userService.getAllUsers()).filter(u => u.role === 'admin');
+      admins.forEach(admin => {
+        addNotification({
+          title: 'Nowy projekt',
+          message: `Utworzono nowy projekt: „${created.name}".`,
+          priority: 'high',
+          recipientId: admin.id,
+        });
+      });
+      loadProjects();
+    });
   };
 
   const updateProject = (id: string, project: Partial<Project>) => {
-    projectService.update(id, project);
-    loadProjects();
+    projectService.update(id, project).then(loadProjects);
   };
 
   const deleteProject = (id: string) => {
-    projectService.delete(id);
-    if (activeProjectId === id) {
-      setActiveProjectId(null);
-    }
-    loadProjects();
+    projectService.delete(id).then(() => {
+      if (activeProjectId === id) {
+        setActiveProjectId(null);
+      }
+      loadProjects();
+    });
   };
 
   return (
-    <ProjectContext.Provider value={{ 
-      projects, 
-      activeProjectId, 
-      setActiveProjectId, 
-      addProject, 
-      updateProject, 
-      deleteProject 
+    <ProjectContext.Provider value={{
+      projects,
+      activeProjectId,
+      setActiveProjectId,
+      addProject,
+      updateProject,
+      deleteProject,
     }}>
       {children}
     </ProjectContext.Provider>

@@ -3,6 +3,8 @@ import type { ReactNode } from 'react';
 import type { Task } from '../types';
 import { taskService } from '../services/taskService';
 import { storyService } from '../services/storyService';
+import { userService } from '../services/userService';
+import { useNotifications } from './NotificationContext';
 
 interface TaskContextType {
   tasks: Task[];
@@ -24,11 +26,12 @@ interface TaskProviderProps {
 }
 
 export const TaskProvider = ({ children, storyId, onStoryStatusChange }: TaskProviderProps) => {
+  const { addNotification } = useNotifications();
   const [tasks, setTasks] = useState<Task[]>([]);
 
   const loadTasks = useCallback(() => {
     if (storyId) {
-      setTasks(taskService.getByStory(storyId));
+      taskService.getByStory(storyId).then(setTasks);
     } else {
       setTasks([]);
     }
@@ -38,60 +41,111 @@ export const TaskProvider = ({ children, storyId, onStoryStatusChange }: TaskPro
     loadTasks();
   }, [loadTasks]);
 
-  const syncStoryStatus = (updatedStoryId: string) => {
-    if (taskService.areAllDone(updatedStoryId)) {
-      storyService.update(updatedStoryId, { status: 'done' });
+  const syncStoryStatus = async (updatedStoryId: string) => {
+    if (await taskService.areAllDone(updatedStoryId)) {
+      await storyService.update(updatedStoryId, { status: 'done' });
     }
     onStoryStatusChange?.();
   };
 
   const addTask = (task: Omit<Task, 'id' | 'createdAt'>) => {
-    taskService.create(task);
-    loadTasks();
+    taskService.create(task).then(async created => {
+      const story = await storyService.getById(created.storyId);
+      if (story) {
+        addNotification({
+          title: 'Nowe zadanie',
+          message: `Dodano zadanie „${created.name}" do historyjki „${story.name}".`,
+          priority: 'medium',
+          recipientId: story.ownerId,
+        });
+      }
+      loadTasks();
+    });
   };
 
   const updateTask = (id: string, updates: Partial<Task>) => {
-    taskService.update(id, updates);
-    loadTasks();
+    taskService.update(id, updates).then(loadTasks);
   };
 
   const assignUser = (taskId: string, userId: string) => {
-    const task = taskService.getById(taskId);
-    if (!task) return;
+    taskService.getById(taskId).then(async task => {
+      if (!task) return;
 
-    taskService.update(taskId, {
-      assignedUserId: userId,
-      status: 'doing',
-      startDate: new Date().toISOString(),
+      await taskService.update(taskId, {
+        assignedUserId: userId,
+        status: 'doing',
+        startDate: new Date().toISOString(),
+      });
+
+      const story = await storyService.getById(task.storyId);
+      if (story && story.status === 'todo') {
+        await storyService.update(task.storyId, { status: 'doing' });
+        onStoryStatusChange?.();
+      }
+
+      const assignedUser = await userService.getUserById(userId);
+      addNotification({
+        title: 'Przypisano do zadania',
+        message: `Zostałeś/aś przypisany/a do zadania „${task.name}"${story ? ` w historyjce „${story.name}"` : ''}.`,
+        priority: 'high',
+        recipientId: userId,
+      });
+
+      if (story && story.ownerId !== userId) {
+        addNotification({
+          title: 'Zmiana statusu zadania',
+          message: `Zadanie „${task.name}" w historyjce „${story.name}" zmieniło status na: W trakcie.${assignedUser ? ` Przypisano: ${assignedUser.firstName} ${assignedUser.lastName}.` : ''}`,
+          priority: 'low',
+          recipientId: story.ownerId,
+        });
+      }
+
+      loadTasks();
     });
-
-    const story = storyService.getAll().find(s => s.id === task.storyId);
-    if (story && story.status === 'todo') {
-      storyService.update(task.storyId, { status: 'doing' });
-      onStoryStatusChange?.();
-    }
-
-    loadTasks();
   };
 
   const completeTask = (taskId: string) => {
-    const task = taskService.getById(taskId);
-    if (!task) return;
+    taskService.getById(taskId).then(async task => {
+      if (!task) return;
 
-    taskService.update(taskId, {
-      status: 'done',
-      endDate: new Date().toISOString(),
+      await taskService.update(taskId, {
+        status: 'done',
+        endDate: new Date().toISOString(),
+      });
+
+      const story = await storyService.getById(task.storyId);
+      if (story) {
+        addNotification({
+          title: 'Zmiana statusu zadania',
+          message: `Zadanie „${task.name}" w historyjce „${story.name}" zostało ukończone.`,
+          priority: 'medium',
+          recipientId: story.ownerId,
+        });
+      }
+
+      await syncStoryStatus(task.storyId);
+      loadTasks();
     });
-
-    syncStoryStatus(task.storyId);
-    loadTasks();
   };
 
   const deleteTask = (id: string) => {
-    const task = taskService.getById(id);
-    taskService.delete(id);
-    if (task) syncStoryStatus(task.storyId);
-    loadTasks();
+    taskService.getById(id).then(async task => {
+      await taskService.delete(id);
+
+      if (task) {
+        const story = await storyService.getById(task.storyId);
+        if (story) {
+          addNotification({
+            title: 'Usunięto zadanie',
+            message: `Zadanie „${task.name}" zostało usunięte z historyjki „${story.name}".`,
+            priority: 'medium',
+            recipientId: story.ownerId,
+          });
+        }
+        await syncStoryStatus(task.storyId);
+      }
+      loadTasks();
+    });
   };
 
   return (

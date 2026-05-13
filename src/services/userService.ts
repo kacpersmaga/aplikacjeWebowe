@@ -1,49 +1,51 @@
-import type { User } from '../types';
-
-const MOCK_USERS: User[] = [
-  {
-    id: 'user-1',
-    firstName: 'Kacper',
-    lastName: 'Smaga',
-    role: 'admin',
-  },
-  {
-    id: 'user-2',
-    firstName: 'Jan',
-    lastName: 'Kowalski',
-    role: 'developer',
-  },
-  {
-    id: 'user-3',
-    firstName: 'Anna',
-    lastName: 'Nowak',
-    role: 'devops',
-  },
-  {
-    id: 'user-4',
-    firstName: 'Piotr',
-    lastName: 'Wiśniewski',
-    role: 'developer',
-  },
-];
+import type { User, Role } from '../types';
+import { createStrategy } from './storageStrategies';
+import type { StorageStrategy } from './storageStrategies';
+import { STORAGE_KEYS } from '../constants/storage';
 
 class UserService {
-  private currentUserId = 'user-1';
+  private storage: StorageStrategy<User>;
 
-  getCurrentUser(): User {
-    return MOCK_USERS.find(u => u.id === this.currentUserId)!;
+  constructor() {
+    this.storage = createStrategy<User>('users', STORAGE_KEYS.USERS);
   }
 
-  getAllUsers(): User[] {
-    return MOCK_USERS;
+  async getAllUsers(): Promise<User[]> {
+    return this.storage.getAll();
   }
 
-  getAssignableUsers(): User[] {
-    return MOCK_USERS.filter(u => u.role === 'developer' || u.role === 'devops');
+  async saveUser(user: User): Promise<User> {
+    await this.storage.upsert(user);
+    return user;
   }
 
-  getUserById(id: string): User | undefined {
-    return MOCK_USERS.find(u => u.id === id);
+  async getUserById(id: string): Promise<User | undefined> {
+    const all = await this.getAllUsers();
+    return all.find(u => u.id === id);
+  }
+
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    const all = await this.getAllUsers();
+    return all.find(u => u.email === email);
+  }
+
+  async updateUserRole(id: string, role: Role): Promise<void> {
+    const user = await this.getUserById(id);
+    if (user) {
+      await this.storage.upsert({ ...user, role });
+    }
+  }
+
+  async setBlocked(id: string, blocked: boolean): Promise<void> {
+    const user = await this.getUserById(id);
+    if (user) {
+      await this.storage.upsert({ ...user, blocked });
+    }
+  }
+
+  async getAssignableUsers(): Promise<User[]> {
+    const all = await this.getAllUsers();
+    return all.filter(u => (u.role === 'developer' || u.role === 'devops') && !u.blocked);
   }
 }
 

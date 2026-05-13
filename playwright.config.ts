@@ -15,9 +15,9 @@ export default defineConfig({
       use: { ...devices['Desktop Chrome'] },
     },
   ],
-  // Start the dev server before running tests
+  // Start the dev server with test env variables before running tests
   webServer: {
-    command: 'npm run dev',
+    command: 'npx vite --mode test',
     url: 'http://localhost:5173',
     reuseExistingServer: !process.env.CI,
   },

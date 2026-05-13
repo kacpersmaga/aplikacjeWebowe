@@ -4,13 +4,16 @@ export interface Project {
   description: string;
 }
 
-export type Role = 'admin' | 'devops' | 'developer';
+export type Role = 'admin' | 'devops' | 'developer' | 'guest';
 
 export interface User {
   id: string;
+  email: string;
   firstName: string;
   lastName: string;
   role: Role;
+  blocked?: boolean;
+  photoURL?: string;
 }
 
 export type Priority = 'low' | 'medium' | 'high';
@@ -39,4 +42,17 @@ export interface Task {
   startDate?: string;
   endDate?: string;
   assignedUserId?: string;
+}
+
+export type ISOString = string;
+export type UserID = string;
+
+export interface Notification {
+  id: string;
+  title: string;
+  message: string;
+  date: ISOString;
+  priority: Priority;
+  isRead: boolean;
+  recipientId: UserID;
 }
