@@ -121,6 +121,7 @@ export const TaskDetail: React.FC<TaskDetailProps> = ({ task, story, onClose }) 
                   key={u.id}
                   onClick={() => assignUser(task.id, u.id)}
                   disabled={u.id === task.assignedUserId}
+                  data-testid="btn-assign-user"
                   className={`flex items-center gap-3 px-3 py-2.5 rounded-lg border transition-all text-left
                     ${u.id === task.assignedUserId
                       ? 'border-primary/40 bg-primary/5 cursor-default'
@@ -150,6 +151,7 @@ export const TaskDetail: React.FC<TaskDetailProps> = ({ task, story, onClose }) 
             size="lg"
             icon={<CheckCircle2 size={16} />}
             onClick={handleComplete}
+            data-testid="btn-complete-task"
             className="w-full justify-center !bg-emerald-600 hover:!bg-emerald-700 !shadow-emerald-600/20"
           >
             Oznacz jako zakończone

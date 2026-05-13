@@ -63,6 +63,7 @@ export const ProjectList: React.FC = () => {
             variant="primary"
             icon={<Plus size={15} />}
             onClick={() => setIsFormOpen(true)}
+            data-testid="btn-new-project"
           >
             Nowy projekt
           </Button>

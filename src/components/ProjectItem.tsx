@@ -15,6 +15,7 @@ export const ProjectItem: React.FC<ProjectItemProps> = ({ project, onEdit }) => 
 
   return (
     <div
+      data-testid="project-card"
       className={`group relative flex flex-col gap-5 p-6 rounded-2xl border transition-all duration-200 animate-fade-in overflow-hidden
         ${isActive
           ? 'bg-bg-sidebar border-primary/40 shadow-lg shadow-primary/5'
@@ -67,6 +68,7 @@ export const ProjectItem: React.FC<ProjectItemProps> = ({ project, onEdit }) => 
             icon={<Pencil size={13} />}
             onClick={() => onEdit(project)}
             title="Edytuj"
+            data-testid="btn-edit-project"
           />
           <Button
             variant="ghost"
@@ -75,6 +77,7 @@ export const ProjectItem: React.FC<ProjectItemProps> = ({ project, onEdit }) => 
             onClick={() => deleteProject(project.id)}
             title="Usuń"
             className="hover:text-danger hover:bg-danger/10"
+            data-testid="btn-delete-project"
           />
         </div>
 
@@ -83,6 +86,7 @@ export const ProjectItem: React.FC<ProjectItemProps> = ({ project, onEdit }) => 
           size="sm"
           icon={<ArrowRight size={13} className={isActive ? 'rotate-180' : ''} />}
           onClick={() => setActiveProjectId(isActive ? null : project.id)}
+          data-testid="btn-select-project"
         >
           {isActive ? 'Odznacz' : 'Wybierz'}
         </Button>

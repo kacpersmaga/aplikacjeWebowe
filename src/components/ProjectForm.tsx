@@ -80,7 +80,7 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({ editProject, onCancel 
 
         <div className="flex justify-end gap-2.5 pt-2">
           <Button type="button" variant="ghost" onClick={onCancel}>Anuluj</Button>
-          <Button type="submit" variant="primary">
+          <Button type="submit" variant="primary" data-testid="btn-submit-project">
             {editProject ? 'Zapisz zmiany' : 'Utwórz projekt'}
           </Button>
         </div>

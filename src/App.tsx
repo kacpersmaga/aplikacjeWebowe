@@ -85,6 +85,7 @@ const AppContent: React.FC = () => {
             {navItems.map(item => (
               <button
                 key={item.id}
+                data-testid={`nav-${item.id}`}
                 onClick={() => !item.disabled && setView(item.id)}
                 disabled={item.disabled}
                 className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-all

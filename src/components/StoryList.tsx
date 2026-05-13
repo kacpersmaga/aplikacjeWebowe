@@ -37,6 +37,7 @@ export const StoryList: React.FC<StoryListProps> = ({ onSelectStory }) => {
   const renderStoryCard = (story: Story) => (
     <div
       key={story.id}
+      data-testid="story-card"
       className="group relative bg-bg-sidebar border border-border rounded-xl overflow-hidden
         transition-all duration-150 hover:border-zinc-300 dark:hover:border-zinc-600 hover:shadow-md"
     >
@@ -52,18 +53,21 @@ export const StoryList: React.FC<StoryListProps> = ({ onSelectStory }) => {
               onClick={() => onSelectStory(story.id)}
               className="p-1.5 text-text-muted hover:text-primary hover:bg-primary/10 rounded-md transition-colors"
               title="Zobacz zadania"
+              data-testid="btn-open-story"
             >
               <ListTodo size={13} />
             </button>
             <button
               onClick={() => handleEdit(story)}
               className="p-1.5 text-text-muted hover:text-text-main hover:bg-black/5 dark:hover:bg-white/5 rounded-md transition-colors"
+              data-testid="btn-edit-story"
             >
               <Edit2 size={13} />
             </button>
             <button
               onClick={() => deleteStory(story.id)}
               className="p-1.5 text-text-muted hover:text-danger hover:bg-danger/10 rounded-md transition-colors"
+              data-testid="btn-delete-story"
             >
               <Trash2 size={13} />
             </button>
@@ -105,7 +109,7 @@ export const StoryList: React.FC<StoryListProps> = ({ onSelectStory }) => {
             <p className="text-sm text-text-muted mt-0.5">{stories.length} historyjek w projekcie</p>
           </div>
         </div>
-        <Button variant="primary" icon={<Plus size={15} />} onClick={() => setIsFormOpen(true)}>
+        <Button variant="primary" icon={<Plus size={15} />} onClick={() => setIsFormOpen(true)} data-testid="btn-new-story">
           Dodaj historyjkę
         </Button>
       </div>

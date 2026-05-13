@@ -107,7 +107,7 @@ export const StoryForm: React.FC<StoryFormProps> = ({ onClose, storyToEdit }) =>
 
         <div className="flex justify-end gap-2.5 pt-2">
           <Button type="button" variant="ghost" onClick={onClose}>Anuluj</Button>
-          <Button type="submit" variant="primary">
+          <Button type="submit" variant="primary" data-testid="btn-submit-story">
             {storyToEdit ? 'Zapisz zmiany' : 'Dodaj historyjkę'}
           </Button>
         </div>

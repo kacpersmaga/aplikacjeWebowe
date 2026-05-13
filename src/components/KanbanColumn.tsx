@@ -45,7 +45,7 @@ export const KanbanColumn: React.FC<KanbanColumnProps> = ({
   const cfg = COLUMN_CONFIG[status];
 
   return (
-    <div className={`flex flex-col border border-border border-t-2 ${cfg.topBorder} rounded-xl bg-bg-dark/30 dark:bg-bg-sidebar/20 overflow-hidden`}>
+    <div data-status={status} className={`flex flex-col border border-border border-t-2 ${cfg.topBorder} rounded-xl bg-bg-dark/30 dark:bg-bg-sidebar/20 overflow-hidden`}>
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-bg-sidebar/40">
         <div className="flex items-center gap-2.5">

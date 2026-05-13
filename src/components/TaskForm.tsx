@@ -103,7 +103,7 @@ export const TaskForm: React.FC<TaskFormProps> = ({ onClose, taskToEdit }) => {
 
         <div className="flex justify-end gap-2.5 pt-2">
           <Button type="button" variant="ghost" onClick={onClose}>Anuluj</Button>
-          <Button type="submit" variant="primary">
+          <Button type="submit" variant="primary" data-testid="btn-submit-task">
             {taskToEdit ? 'Zapisz zmiany' : 'Dodaj zadanie'}
           </Button>
         </div>

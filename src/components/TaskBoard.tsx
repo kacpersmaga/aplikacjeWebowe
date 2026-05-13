@@ -44,6 +44,7 @@ export const TaskBoard: React.FC<TaskBoardProps> = ({ story }) => {
     return (
       <div
         key={task.id}
+        data-testid="task-card"
         onClick={() => setSelectedTask(task)}
         className="group relative bg-bg-sidebar border border-border rounded-xl overflow-hidden
           transition-all duration-150 hover:border-zinc-300 dark:hover:border-zinc-600 hover:shadow-md cursor-pointer"
@@ -60,6 +61,7 @@ export const TaskBoard: React.FC<TaskBoardProps> = ({ story }) => {
                 <button
                   onClick={(e) => handleEdit(e, task)}
                   className="p-1.5 text-text-muted hover:text-text-main hover:bg-black/5 dark:hover:bg-white/5 rounded-md transition-colors"
+                  data-testid="btn-edit-task"
                 >
                   <Edit2 size={13} />
                 </button>
@@ -67,6 +69,7 @@ export const TaskBoard: React.FC<TaskBoardProps> = ({ story }) => {
               <button
                 onClick={(e) => handleDelete(e, task.id)}
                 className="p-1.5 text-text-muted hover:text-danger hover:bg-danger/10 rounded-md transition-colors"
+                data-testid="btn-delete-task"
               >
                 <Trash2 size={13} />
               </button>
@@ -141,7 +144,7 @@ export const TaskBoard: React.FC<TaskBoardProps> = ({ story }) => {
             </p>
           </div>
         </div>
-        <Button variant="primary" icon={<Plus size={15} />} onClick={() => setIsFormOpen(true)}>
+        <Button variant="primary" icon={<Plus size={15} />} onClick={() => setIsFormOpen(true)} data-testid="btn-new-task">
           Dodaj zadanie
         </Button>
       </div>
